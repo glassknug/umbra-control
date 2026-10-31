@@ -1,0 +1,14 @@
+Umbra Control for Linux — 0.3.3 preview
+Project by glassknug
+
+Extract all files. Install Tk and the USB permission rule as described in README.md.
+From this folder, run without sudo:
+python3 install_desktop.py
+
+Start Umbra Control from your application menu.
+Closing the window minimizes it; use Quit to exit and request 100% duty.
+
+Fan curves: select a temperature sensor, edit points and choose Apply curve.
+Optional login startup saves a separate curve snapshot and is off by default.
+Only requested 75% and 100% fan duty have been hardware-tested.
+See README.md for validation limits, cooling behavior and original credits.
