@@ -6,6 +6,12 @@ Native Linux desktop control for **AsiaHorse Umbra** RGB lighting and USB fan cu
 
 An independent community project, not affiliated with or endorsed by AsiaHorse.
 
+## Demo video
+
+[Watch the Umbra Control demo (MP4, 1:06)](https://github.com/glassknug/umbra-control-linux/releases/download/v0.3.3-preview/umbra-control-demo.mp4)
+
+A real-hardware demonstration of the application and the connected PC lighting. The video is attached to the preview release (approximately 40 MB).
+
 ## Features
 
 - Five RGB effects: Solid color, Breathing, Rainbow, Color cycle and Chase.
