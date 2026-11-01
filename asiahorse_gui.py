@@ -54,7 +54,7 @@ def main():
     def about():
         messagebox.showinfo(
             "About Umbra Control for Linux",
-            "Umbra Control for Linux · 0.3.3 preview\n\n"
+            "Umbra Control for Linux · 0.4.0 preview\n\n"
             "Project by glassknug.\n"
             "Desktop GUI, RGB effects, USB fan-control command analysis and hardware testing, "
             "temperature curves, profiles, graphs, shortcuts and menu launcher.\n\n"
@@ -82,6 +82,17 @@ def main():
     fan_canvas.bind("<Configure>", lambda e: fan_canvas.itemconfigure(fan_window, width=e.width))
     notebook.add(lighting, text="RGB & sensors")
     notebook.add(fan_container, text="Fan curves")
+    layout_container = ttk.Frame(notebook)
+    layout_canvas = tk.Canvas(layout_container, bg="#151923", highlightthickness=0)
+    layout_scroll = ttk.Scrollbar(layout_container, orient="vertical", command=layout_canvas.yview)
+    layout_canvas.configure(yscrollcommand=layout_scroll.set)
+    layout_scroll.pack(side="right", fill="y")
+    layout_canvas.pack(side="left", fill="both", expand=True)
+    control_container = ttk.Frame(layout_canvas, padding=12)
+    layout_window = layout_canvas.create_window(0, 0, anchor="nw", window=control_container)
+    control_container.bind("<Configure>", lambda _: layout_canvas.configure(scrollregion=layout_canvas.bbox("all")))
+    layout_canvas.bind("<Configure>", lambda e: layout_canvas.itemconfigure(layout_window, width=e.width))
+    notebook.add(layout_container, text="RGB layout")
     frame = lighting
     ttk.Label(frame, text="Lighting · all connected RGB ports").pack(anchor="w")
     effect = tk.StringVar(value=EFFECTS[0])
@@ -190,6 +201,8 @@ def main():
 
     from fan_ui import FanTab
     fan_tab = FanTab(root, fans, player)
+    from rgb_layout_ui import RGBLayoutTab
+    control_tab = RGBLayoutTab(root, control_container, player, status)
     if "--autostart" in sys.argv:
         fan_tab.start_saved()
         root.after(100, root.iconify)

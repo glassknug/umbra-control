@@ -21,7 +21,7 @@ class DesktopInstallTests(unittest.TestCase):
                 self.assertEqual((target / "asiahorse-umbra" / name).read_bytes(), (source / name).read_bytes())
             self.assertTrue((target / "icons/hicolor/scalable/apps/asiahorse-umbra.svg").is_file())
             result = subprocess.run([sys.executable, '-I', '-c',
-                'import sys; sys.path.insert(0, sys.argv[1]); import startup',
+                'import sys; sys.path.insert(0, sys.argv[1]); import startup; import rgb_layout_ui; import fan_ui',
                 str(target / "asiahorse-umbra")], cwd=folder, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             install(source, target, Path("/usr/bin/python3"))
