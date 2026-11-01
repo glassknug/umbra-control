@@ -63,3 +63,9 @@ to `packet_count * 20` slots. `packet_count = ceil(total_leds / 20)`.
    hidraw permissions and fails to open the device. This tool avoids the
    problem by using `/dev/hidraw` directly — no dependencies.
 
+
+## Individual motor-control investigation
+
+Static inspection of the supplied UMBRA 3.5.5 Windows program shows `ARGB_pwm_speed(device, percentage)` building an `FB <percentage>` body with no port field. The examined speed-selector handlers use their index to choose a preset percentage and store one shared `FAN_speed`. `write_argb_fan_all` writes JSON settings rather than HID traffic. The examined `argb_fan_set(device, id)` selects a lighting configuration, not a verified motor-duty target.
+
+These inspected paths do not establish individual motor control; other revisions or undocumented capabilities remain unknown. The layout preview sends only the previously implemented hub-wide commands.

@@ -21,8 +21,38 @@ class Settings:
     speed: float = 1.0
 
 
+
+@dataclass(frozen=True)
+class SceneSettings:
+    # Ports are 1-based in the UI; the wire LED stream remains in port order.
+    ports: tuple
+    effect: str = "RGB layout"
+
+    def __post_init__(self):
+        used = set()
+        for port, settings in self.ports:
+            if type(port) is not int or not 1 <= port <= 10 or port in used:
+                raise ValueError("Assign each RGB port (1–10) only once")
+            if not isinstance(settings, Settings) or settings.effect not in EFFECTS:
+                raise ValueError("Invalid per-port effect")
+            used.add(port)
+
+
+def static_settings(settings):
+    if isinstance(settings, SceneSettings):
+        return all(s.effect == "Solid color" for _, s in settings.ports)
+    return settings.effect == "Solid color"
+
+
 def make_frame(ports, settings, elapsed):
     """Repeat the effect independently on each port; speed = cycles / 4 seconds."""
+    if isinstance(settings, SceneSettings):
+        mapped = dict(settings.ports)
+        frame = []
+        for port, count in enumerate(ports, 1):
+            chosen = mapped.get(port, Settings(brightness=0))
+            frame.extend(make_frame([count], chosen, elapsed))
+        return frame
     if settings.effect not in EFFECTS:
         raise ValueError("Unknown effect")
     phase = elapsed * settings.speed / 4
@@ -64,6 +94,7 @@ def send_frame(hub, colors):
 class Player:
     """Only this worker touches HID. Tk communicates through queues."""
     def __init__(self):
+        self.port_counts = ()
         self.events = queue.Queue()
         self.fan_events = queue.Queue()
         self.commands = queue.Queue()
@@ -162,6 +193,7 @@ class Player:
                             hub = None
                         self.events.put("Connecting to hub…")
                         hub, ports = self._connect()
+                        self.port_counts = tuple(ports)
                         fan_owned = False
                         previous = None
                         next_sample = 0
@@ -202,7 +234,7 @@ class Player:
                         repeats += 1
                         if repeats == 1:
                             self.events.put(f"{settings.effect} · {sum(ports)} LED · {sum(n > 0 for n in ports)} ports")
-                        if settings.effect == "Solid color" and repeats >= 5:
+                        if static_settings(settings) and repeats >= 5:
                             settings = None
                 except (OSError, RuntimeError, ValueError, SystemExit) as exc:
                     self.events.put(f"Could not control hub: {exc}")
@@ -217,6 +249,7 @@ class Player:
                     settings = None
                     previous = None
                     ports = []
+                    self.port_counts = ()
                     fan_owned = False
                     if hub is not None:
                         hub.close()

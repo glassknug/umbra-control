@@ -1,14 +1,16 @@
-Umbra Control for Linux — 0.3.3 preview
+Umbra Control for Linux — 0.4.0 RGB layout preview
 Project by glassknug
 
-Extract all files. Install Tk and the USB permission rule as described in README.md.
-From this folder, run without sudo:
+Quit the currently running app first. Extract all files together.
+To test directly, open a terminal in this folder and run:
+python3 asiahorse_gui.py
+
+Open RGB layout. Drag Fan, LED strip or ARGB cable into the case.
+Assign its physical hub port, color and effect. Use Apply layout RGB.
+Unassigned hub ports turn dark. Save layout preserves your design.
+Devices sharing a port share its effect. Separate USB cable controllers
+and individual fan motor duty are not supported by this feature.
+
+README.md covers Tk, USB permissions, known limitations and original credits.
+To install the menu launcher later, run without sudo:
 python3 install_desktop.py
-
-Start Umbra Control from your application menu.
-Closing the window minimizes it; use Quit to exit and request 100% duty.
-
-Fan curves: select a temperature sensor, edit points and choose Apply curve.
-Optional login startup saves a separate curve snapshot and is off by default.
-Only requested 75% and 100% fan duty have been hardware-tested.
-See README.md for validation limits, cooling behavior and original credits.

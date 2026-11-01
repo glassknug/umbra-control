@@ -2,9 +2,31 @@
 
 Native Linux desktop control for **AsiaHorse Umbra** RGB lighting and USB fan curves.
 
-**0.3.3 preview · Developed by [glassknug](https://github.com/glassknug) · MIT license**
+**0.4.0 RGB layout preview · Developed by [glassknug](https://github.com/glassknug) · MIT license**
 
 An independent community project, not affiliated with or endorsed by AsiaHorse.
+
+## RGB layout preview
+
+This branch adds an **RGB layout** tab: a PC-case diagram with draggable **fans**, **LED strips** and **Strimer-style ARGB cables**. Individual RGB effects use existing per-port LED addressing; individual motor duty is not implemented.
+
+1. Drag a type from the palette into the PC case, or choose a type and **Add device**.
+2. Name the device and assign hub port 1–10 to match its physical wiring. One icon represents a port / LED chain; each port can be placed once.
+3. Choose a color, effect, brightness and speed. Use **Update selected device** to commit edits to the diagram.
+4. Use **Apply layout RGB** to send the layout. **Unassigned ports turn dark**, and this replaces the running RGB effect. **Stop RGB animation** freezes the last frame; **Turn off ALL RGB** sends black.
+5. Use **Save layout** to keep positions and settings in `$XDG_CONFIG_HOME/umbra-control/rgb-layout.json` (default `~/.config/umbra-control/rgb-layout.json`). Apply and Save also commit the selected device's pending edits. Loading a layout does not apply it automatically.
+
+A cable must be compatible with the Umbra ARGB output, including any manufacturer-supported adapter requirements. Selecting an ARGB cable shape does not add support for a separate USB controller. Geometry and positions are illustrations; they are not device detection or an exact LED map of the cable.
+
+The application reads LED counts from the hub when RGB starts. Each port's actual LED count determines its part of the RGB stream. Devices sharing a port share its effect. The existing all-port RGB controls remain available; applying either RGB mode replaces the other. The new tab does not issue fan-duty commands; existing temperature curves continue through the shared USB worker.
+
+After choosing **Quit** in any running copy, test from this extracted branch folder:
+
+```bash
+python3 asiahorse_gui.py
+```
+
+Automated tests cover RGB stream offsets, independent per-port effects, validation, storage failure recovery and installed-module imports. Desktop visual/dragging checks and hardware validation of the new per-port interface remain pending; this build environment has no display server.
 
 ## Demo video
 
