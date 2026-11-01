@@ -1,4 +1,4 @@
-Umbra Control for Linux — 0.4.0 RGB layout preview
+Umbra Control for Linux — 0.4.0 preview
 Project by glassknug
 
 Quit the currently running app first. Extract all files together.
@@ -14,3 +14,6 @@ and individual fan motor duty are not supported by this feature.
 README.md covers Tk, USB permissions, known limitations and original credits.
 To install the menu launcher later, run without sudo:
 python3 install_desktop.py
+
+For daisy-chained fans, select the Fan object and choose Fan count (1–10),
+then Horizontal or Vertical. Update selected device, then Save layout.

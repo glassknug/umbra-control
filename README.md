@@ -2,13 +2,13 @@
 
 Native Linux desktop control for **AsiaHorse Umbra** RGB lighting and USB fan curves.
 
-**0.4.0 RGB layout preview · Developed by [glassknug](https://github.com/glassknug) · MIT license**
+**0.4.0 preview · Developed by [glassknug](https://github.com/glassknug) · MIT license**
 
 An independent community project, not affiliated with or endorsed by AsiaHorse.
 
-## RGB layout preview
+## RGB layout
 
-This branch adds an **RGB layout** tab: a PC-case diagram with draggable **fans**, **LED strips** and **Strimer-style ARGB cables**. Individual RGB effects use existing per-port LED addressing; individual motor duty is not implemented.
+The **RGB layout** tab provides a PC-case diagram with draggable **fans**, **LED strips** and **Strimer-style ARGB cables**. Individual RGB effects use existing per-port LED addressing; individual motor duty is not implemented.
 
 1. Drag a type from the palette into the PC case, or choose a type and **Add device**.
 2. Name the device and assign hub port 1–10 to match its physical wiring. One icon represents a port / LED chain; each port can be placed once.
@@ -21,13 +21,13 @@ A cable must be compatible with the Umbra ARGB output, including any manufacture
 
 The application reads LED counts from the hub when RGB starts. Each port's actual LED count determines its part of the RGB stream. Devices sharing a port share its effect. The existing all-port RGB controls remain available; applying either RGB mode replaces the other. The new tab does not issue fan-duty commands; existing temperature curves continue through the shared USB worker.
 
-After choosing **Quit** in any running copy, test from this extracted branch folder:
+To run from a source download, choose **Quit** in any running copy first, then run:
 
 ```bash
 python3 asiahorse_gui.py
 ```
 
-37 automated tests pass, covering RGB stream offsets, independent per-port effects, daisy-chain geometry and count persistence, validation, storage failure recovery and installed-module imports. Desktop visual/dragging checks and hardware validation of the new per-port interface remain pending; this build environment has no display server.
+37 automated tests pass, covering RGB stream offsets, independent per-port effects, daisy-chain geometry and count persistence, validation, storage failure recovery and installed-module imports. glassknug has tested the interface on Bazzite; screenshots show grouped fan rendering, ARGB cable placement and matching separate RGB port-group colors on the connected hardware. Broader hardware compatibility and further effect testing remain open.
 
 ## Demo video
 
@@ -37,6 +37,8 @@ A real-hardware demonstration of the application and the connected PC lighting. 
 
 ## Features
 
+- Draggable PC layout with per-port RGB settings for fans, LED strips and ARGB cables.
+- Daisy-chain fan groups: choose 1–10 displayed fans in horizontal or vertical rows.
 - Five RGB effects: Solid color, Breathing, Rainbow, Color cycle and Chase.
 - Color, brightness and effect-speed controls.
 - Editable temperature curves with draggable points and manual fan duty from 30–100%.
@@ -46,9 +48,21 @@ A real-hardware demonstration of the application and the connected PC lighting. 
 - Optional minimized startup with a saved curve after desktop login.
 - Application-menu launcher and bundled window icon.
 
-Control applies to all hub fans together. Requested duty is **not measured RPM**.
+Motor duty applies to all hub fans together; RGB layout effects can differ per port. Requested fan duty is **not measured RPM**.
 
 ## Screenshots
+
+### RGB layout and daisy-chain groups
+
+![RGB layout showing two vertical fans, three vertical fans, three horizontal fans and an ARGB cable](docs/screenshots/rgb-layout.png)
+
+Choose the number of fans in each port group and arrange them to match your PC. Each group shares one port effect. The cable shape represents compatible Umbra-connected ARGB lighting.
+
+### Connected hardware
+
+![PC with separate purple, red and cyan fan groups and an illuminated ARGB cable](docs/screenshots/rgb-hardware.jpg)
+
+Example from glassknug’s Bazzite system. Fan count is a visual layout setting; it does not change the hub’s detected LED count.
 
 ### Fan curves
 
@@ -143,7 +157,7 @@ Developed and tested with an Umbra hub on **Bazzite Linux**. All five RGB effect
 
 USB motor-speed changes were hardware-verified at requested **100% → 75% → 100%**. Lower duty values, other hardware/firmware revisions, combined RGB/curve operation and login startup need further hardware testing. The supported UI range is 30–100%; percentages do not guarantee a particular RPM.
 
-The 0.3.3 package includes the startup dependency missing from 0.3.2. There are **22 passing automated tests**, including loading the startup module from an isolated installed copy. Automated tests do not substitute for desktop and hardware verification.
+The 0.3.3 package includes the startup dependency missing from 0.3.2. There are **37 passing automated tests**, including loading the startup module from an isolated installed copy. Automated tests do not substitute for desktop and hardware verification.
 
 ## USB protocol research
 

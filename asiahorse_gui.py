@@ -54,7 +54,7 @@ def main():
     def about():
         messagebox.showinfo(
             "About Umbra Control for Linux",
-            "Umbra Control for Linux · 0.4.0 RGB layout preview\n\n"
+            "Umbra Control for Linux · 0.4.0 preview\n\n"
             "Project by glassknug.\n"
             "Desktop GUI, RGB effects, USB fan-control command analysis and hardware testing, "
             "temperature curves, profiles, graphs, shortcuts and menu launcher.\n\n"
