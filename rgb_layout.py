@@ -32,6 +32,9 @@ def validate_layout(data):
             raise ValueError('Names need 1–32 printable characters')
         if d.get('kind') not in KINDS or d.get('orientation') not in ('Horizontal','Vertical'):
             raise ValueError('Invalid device type or orientation')
+        fan_count=d.get('fan_count',1)
+        if type(fan_count) is not int or not 1 <= fan_count <= 10:
+            raise ValueError('Fan count must be a whole number from 1 to 10')
         xy=[]
         for axis in ('x','y'):
             v=d.get(axis)
@@ -53,7 +56,7 @@ def validate_layout(data):
             values.append(float(v))
         ports.add(port)
         result.append(dict(port=port,name=name.strip(),kind=d['kind'],orientation=d['orientation'],x=xy[0],y=xy[1],
-                           color=color.lower(),effect=d['effect'],brightness=values[0],speed=values[1]))
+                           color=color.lower(),effect=d['effect'],brightness=values[0],speed=values[1],fan_count=fan_count))
     return dict(version=1,devices=result)
 
 
@@ -63,7 +66,7 @@ def placement(devices,kind,x,y):
     if port is None:
         raise ValueError('All 10 hub ports are already placed')
     d=dict(port=port,name=f'{kind} {port}',kind=kind,orientation='Horizontal',x=x,y=y,
-           color='#71e6cf',effect='Solid color',brightness=70,speed=1)
+           color='#71e6cf',effect='Solid color',brightness=70,speed=1,fan_count=1)
     return validate_layout(dict(version=1,devices=[d]))['devices'][0]
 
 
@@ -93,3 +96,19 @@ def save_layout(data,path=None):
         os.replace(temp,path)
     finally:
         if os.path.exists(temp):os.unlink(temp)
+
+
+def fan_geometry(count, orientation, available_width, available_height):
+    """Return grouped fan centers and size; fit the chain inside the case."""
+    if type(count) is not int or not 1 <= count <= 10:
+        raise ValueError('Fan count must be 1–10')
+    vertical = orientation == 'Vertical'
+    natural_length = 54 + 62 * (count - 1)
+    natural_width, natural_height = (54, natural_length) if vertical else (natural_length, 54)
+    scale = min(1, available_width / natural_width, available_height / natural_height)
+    radius = 27 * scale
+    offsets = []
+    for i in range(count):
+        offset = (i - (count - 1) / 2) * 62 * scale
+        offsets.append((0, offset) if vertical else (offset, 0))
+    return offsets, radius, natural_width * scale, natural_height * scale

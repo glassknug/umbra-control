@@ -12,9 +12,10 @@ This branch adds an **RGB layout** tab: a PC-case diagram with draggable **fans*
 
 1. Drag a type from the palette into the PC case, or choose a type and **Add device**.
 2. Name the device and assign hub port 1–10 to match its physical wiring. One icon represents a port / LED chain; each port can be placed once.
-3. Choose a color, effect, brightness and speed. Use **Update selected device** to commit edits to the diagram.
-4. Use **Apply layout RGB** to send the layout. **Unassigned ports turn dark**, and this replaces the running RGB effect. **Stop RGB animation** freezes the last frame; **Turn off ALL RGB** sends black.
-5. Use **Save layout** to keep positions and settings in `$XDG_CONFIG_HOME/umbra-control/rgb-layout.json` (default `~/.config/umbra-control/rgb-layout.json`). Apply and Save also commit the selected device's pending edits. Loading a layout does not apply it automatically.
+3. For a **Fan** object, choose **Fan count · daisy chain** (1–10) and Horizontal or Vertical to draw the connected fans as one movable group. This is a visual count; it does not divide or change the port's detected LEDs. Old layouts default to one fan.
+4. Choose a color, effect, brightness and speed. Use **Update selected device** to commit edits to the diagram.
+5. Use **Apply layout RGB** to send the layout. **Unassigned ports turn dark**, and this replaces the running RGB effect. **Stop RGB animation** freezes the last frame; **Turn off ALL RGB** sends black.
+6. Use **Save layout** to keep positions and settings in `$XDG_CONFIG_HOME/umbra-control/rgb-layout.json` (default `~/.config/umbra-control/rgb-layout.json`). Apply and Save also commit the selected device's pending edits. Loading a layout does not apply it automatically.
 
 A cable must be compatible with the Umbra ARGB output, including any manufacturer-supported adapter requirements. Selecting an ARGB cable shape does not add support for a separate USB controller. Geometry and positions are illustrations; they are not device detection or an exact LED map of the cable.
 
@@ -26,7 +27,7 @@ After choosing **Quit** in any running copy, test from this extracted branch fol
 python3 asiahorse_gui.py
 ```
 
-Automated tests cover RGB stream offsets, independent per-port effects, validation, storage failure recovery and installed-module imports. Desktop visual/dragging checks and hardware validation of the new per-port interface remain pending; this build environment has no display server.
+37 automated tests pass, covering RGB stream offsets, independent per-port effects, daisy-chain geometry and count persistence, validation, storage failure recovery and installed-module imports. Desktop visual/dragging checks and hardware validation of the new per-port interface remain pending; this build environment has no display server.
 
 ## Demo video
 

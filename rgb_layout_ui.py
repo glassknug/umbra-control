@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import colorchooser, messagebox, ttk
 
 from effects import EFFECTS
-from rgb_layout import KINDS, load_layout, placement, save_layout, scene_settings, validate_layout
+from rgb_layout import KINDS, load_layout, placement, save_layout, scene_settings, validate_layout, fan_geometry
 
 BG,PANEL,TEXT,MUTED,ACCENT='#151923','#202737','#e9eef8','#bbc5d7','#71e6cf'
 
@@ -14,6 +14,7 @@ class RGBLayoutTab:
         self.root,self.player=root,player
         self.devices=[];self.selected=None;self.dragging=None;self.offset=(0,0);self.dirty=False
         self.choice=tk.StringVar();self.name=tk.StringVar();self.port=tk.StringVar();self.kind=tk.StringVar(value=KINDS[0])
+        self.fan_count=tk.IntVar(value=1)
         self.orientation=tk.StringVar(value='Horizontal');self.color=tk.StringVar(value=ACCENT)
         self.effect=tk.StringVar(value=EFFECTS[0]);self.brightness=tk.DoubleVar(value=70);self.speed=tk.DoubleVar(value=1)
         self.status=tk.StringVar(value='Drag a device into the case. Editing the layout sends no commands.')
@@ -34,6 +35,11 @@ class RGBLayoutTab:
         ttk.Label(side,text='Shape / device type').pack(anchor='w')
         self.kind_box=ttk.Combobox(side,textvariable=self.kind,values=KINDS,state='readonly');self.kind_box.pack(fill='x',pady=3)
         self.orientation_box=ttk.Combobox(side,textvariable=self.orientation,values=('Horizontal','Vertical'),state='readonly');self.orientation_box.pack(fill='x',pady=3)
+        self.count_row=ttk.Frame(side)
+        ttk.Label(self.count_row,text='Fan count · daisy chain').pack(side='left')
+        self.count_box=ttk.Spinbox(self.count_row,from_=1,to=10,increment=1,textvariable=self.fan_count,width=4,state='readonly')
+        self.count_box.pack(side='right')
+        self.kind.trace_add('write',lambda *_:self.show_fan_count())
         ttk.Label(side,text='Effect').pack(anchor='w')
         self.effect_box=ttk.Combobox(side,textvariable=self.effect,values=EFFECTS,state='readonly');self.effect_box.pack(fill='x',pady=3)
         self.color_button=ttk.Button(side,text='Choose color…',command=self.choose_color);self.color_button.pack(fill='x',pady=3)
@@ -68,24 +74,46 @@ class RGBLayoutTab:
     def bounds(self):
         return 20,76,max(self.canvas.winfo_width(),330)-15,max(self.canvas.winfo_height(),360)-18
 
+    def group_geometry(self,d):
+        x0,y0,x1,y1=self.bounds()
+        if d['kind']=='Fan':
+            return fan_geometry(d.get('fan_count',1),d['orientation'],x1-x0-24,y1-y0-100)
+        return [],27,104,72
+
     def screen(self,d):
         x0,y0,x1,y1=self.bounds()
-        return x0+61+d['x']*(x1-x0-122),y0+58+d['y']*(y1-y0-116)
+        _,_,w,h=self.group_geometry(d)
+        mx,my=w/2+10,h/2+32
+        return x0+mx+d['x']*(x1-x0-2*mx),y0+my+d['y']*(y1-y0-2*my)
 
-    def position(self,x,y):
+    def position(self,x,y,d=None):
         x0,y0,x1,y1=self.bounds()
-        return max(0,min(1,(x-x0-61)/(x1-x0-122))),max(0,min(1,(y-y0-58)/(y1-y0-116)))
+        if d is None: w,h=104,72
+        else: _,_,w,h=self.group_geometry(d)
+        mx,my=w/2+10,h/2+32
+        return max(0,min(1,(x-x0-mx)/max(1,x1-x0-2*mx))),max(0,min(1,(y-y0-my)/max(1,y1-y0-2*my)))
+
+    def show_fan_count(self):
+        if self.selected is not None and self.kind.get()=='Fan':
+            self.count_row.pack(fill='x',pady=3,after=self.orientation_box)
+        else:
+            self.count_row.pack_forget()
+
+    def draw_fan(self,x,y,r,color):
+        c=self.canvas
+        c.create_rectangle(x-r,y-r,x+r,y+r,fill=PANEL,outline=color,width=2)
+        c.create_oval(x-r*.81,y-r*.81,x+r*.81,y+r*.81,outline=color,width=2)
+        for angle in range(0,360,90):
+            a=math.radians(angle);bx,by=x+r*.41*math.cos(a),y+r*.41*math.sin(a)
+            c.create_oval(bx-r*.22,by-r*.22,bx+r*.22,by+r*.22,fill=color,outline='')
+        c.create_oval(x-r*.18,y-r*.18,x+r*.18,y+r*.18,fill=TEXT,outline='')
 
     def icon(self,x,y,d,selected=False):
         c=self.canvas;color=d['color'];vertical=d['orientation']=='Vertical'
-        if selected:c.create_rectangle(x-59,y-52,x+59,y+53,outline=ACCENT,dash=(3,3))
+        offsets,r,w,h=self.group_geometry(d)
+        if selected:c.create_rectangle(x-w/2-5,y-h/2-5,x+w/2+5,y+h/2+25,outline=ACCENT,dash=(3,3))
         if d['kind']=='Fan':
-            c.create_rectangle(x-27,y-27,x+27,y+27,fill=PANEL,outline=color,width=2)
-            c.create_oval(x-22,y-22,x+22,y+22,outline=color,width=3)
-            for angle in range(0,360,90):
-                a=math.radians(angle);bx,by=x+11*math.cos(a),y+11*math.sin(a)
-                c.create_oval(bx-6,by-6,bx+6,by+6,fill=color,outline='')
-            c.create_oval(x-5,y-5,x+5,y+5,fill=TEXT,outline='')
+            for dx,dy in offsets:self.draw_fan(x+dx,y+dy,r,color)
         elif d['kind']=='LED strip':
             if vertical:c.create_rectangle(x-7,y-32,x+7,y+32,fill=PANEL,outline='#65718d')
             else:c.create_rectangle(x-43,y-7,x+43,y+7,fill=PANEL,outline='#65718d')
@@ -104,7 +132,8 @@ class RGBLayoutTab:
                 c.create_rectangle(x-51,y-25,x-44,y+25,fill='#53617c',outline='')
                 c.create_rectangle(x+44,y-25,x+51,y+25,fill='#53617c',outline='')
         label=d['name'] if len(d['name'])<=16 else d['name'][:15]+'…'
-        c.create_text(x,y+46,text=f'{label} · P{d["port"]}',fill=TEXT,font=('Sans',9,'bold'))
+        count_label=f' · {d.get("fan_count",1)} fans' if d['kind']=='Fan' and d.get('fan_count',1)>1 else ''
+        c.create_text(x,y+h/2+14,text=f'{label}{count_label} · P{d["port"]}',fill=TEXT,font=('Sans',9,'bold'))
 
     def draw(self):
         c=self.canvas;c.delete('all');x0,y0,x1,y1=self.bounds()
@@ -137,8 +166,10 @@ class RGBLayoutTab:
         if valid:
             d=self.devices[index];self.choices.current(index)
             for key in ('name','kind','orientation','color','effect','brightness','speed'):getattr(self,key).set(d[key])
+            self.fan_count.set(d.get('fan_count',1))
             self.port.set(str(d['port']))
         else:self.choice.set('');self.name.set('');self.port.set('')
+        self.show_fan_count()
         self.draw()
 
     def select_choice(self,_=None):self.select(self.choices.current() if self.devices else None)
@@ -155,6 +186,7 @@ class RGBLayoutTab:
         try:
             devices=[dict(d) for d in self.devices]
             values={key:getattr(self,key).get() for key in ('name','kind','orientation','color','effect','brightness','speed')}
+            values['fan_count']=self.fan_count.get()
             values['port']=int(self.port.get());devices[self.selected].update(values)
             self.devices=validate_layout(dict(version=1,devices=devices))['devices']
         except (ValueError,tk.TclError) as exc:
@@ -178,14 +210,15 @@ class RGBLayoutTab:
             i=min(2,int((e.x-x0)/((x1-x0)/3)));self.dragging=KINDS[i];self.ghost=(e.x,e.y);return
         for i in reversed(range(len(self.devices))):
             x,y=self.screen(self.devices[i])
-            if abs(x-e.x)<=58 and abs(y-e.y)<=52:
+            _,_,w,h=self.group_geometry(self.devices[i])
+            if abs(x-e.x)<=w/2+5 and abs(y-e.y)<=h/2+25:
                 self.select(i);self.dragging=i;self.offset=(e.x-x,e.y-y);return
         self.select(None)
 
     def motion(self,e):
         if isinstance(self.dragging,str):self.ghost=(e.x,e.y)
         elif self.dragging is not None:
-            x,y=self.position(e.x-self.offset[0],e.y-self.offset[1]);self.devices[self.dragging].update(x=x,y=y);self.mark_dirty()
+            x,y=self.position(e.x-self.offset[0],e.y-self.offset[1],self.devices[self.dragging]);self.devices[self.dragging].update(x=x,y=y);self.mark_dirty()
         else:return
         self.draw()
 

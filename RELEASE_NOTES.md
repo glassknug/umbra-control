@@ -7,3 +7,7 @@ Unassigned ports turn dark when applying a layout. All-port RGB and layout RGB r
 Automated tests cover per-port stream offsets (including empty ports), independent effects, input validation, failed-save recovery, RGB-only apply routing and installed imports. Desktop visual/dragging and new live per-port hardware tests remain pending.
 
 The existing 0.3.3 preview release remains available separately.
+
+## Daisy-chain visualization
+
+Fan objects now offer Fan count (1–10), shown only when a fan is selected. Horizontal/Vertical orientation draws the chain as a single movable port group. Count persists with the layout; older files default to one. The count does not change LED addressing or hardware commands. 37 tests pass; desktop appearance still needs verification.

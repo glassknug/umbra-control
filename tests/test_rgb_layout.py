@@ -90,3 +90,44 @@ class RGBSceneWorkerTests(unittest.TestCase):
             finally:
                 p.close();p.thread.join(2)
             self.assertFalse(p.thread.is_alive())
+
+class DaisyChainTests(unittest.TestCase):
+    def test_legacy_layout_defaults_to_one_and_count_roundtrips(self):
+        d=placement([],KINDS[0],.5,.5)
+        d.pop('fan_count')
+        normalized=validate_layout(dict(version=1,devices=[d]))
+        self.assertEqual(normalized['devices'][0]['fan_count'],1)
+        normalized['devices'][0]['fan_count']=3
+        normalized['devices'][0]['orientation']='Vertical'
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'layout.json'
+            save_layout(normalized,path)
+            self.assertEqual(load_layout(path)['devices'][0]['fan_count'],3)
+        for value in (0,-1,11,2.5,True,'3',None):
+            d['fan_count']=value
+            with self.subTest(value=value),self.assertRaises(ValueError):
+                validate_layout(dict(version=1,devices=[d]))
+
+    def test_fan_count_does_not_change_rgb_stream_or_port_assignment(self):
+        d=placement([],KINDS[0],.5,.5)
+        one=scene_settings(dict(version=1,devices=[d]))
+        d['fan_count']=3
+        three=scene_settings(dict(version=1,devices=[d]))
+        self.assertEqual(one,three)
+        self.assertEqual(make_frame([24,16],one,.5),make_frame([24,16],three,.5))
+
+    def test_geometry_rotates_and_fits_whole_group_inside_available_space(self):
+        from rgb_layout import fan_geometry
+        for count in (1,2,3,10):
+            for orientation in ('Horizontal','Vertical'):
+                centers,r,w,h=fan_geometry(count,orientation,210,160)
+                self.assertEqual(len(centers),count)
+                self.assertLessEqual(w,210);self.assertLessEqual(h,160)
+                for x,y in centers:
+                    self.assertLessEqual(abs(x)+r,w/2+.00001)
+                    self.assertLessEqual(abs(y)+r,h/2+.00001)
+                self.assertEqual(sum(x for x,_ in centers),0)
+                self.assertAlmostEqual(sum(y for _,y in centers),0)
+        centers,_,_,_=fan_geometry(3,'Vertical',300,300)
+        self.assertTrue(all(x==0 for x,_ in centers))
+        self.assertEqual(len({y for _,y in centers}),3)
