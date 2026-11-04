@@ -76,6 +76,18 @@ def make_frame(ports, settings, elapsed):
     return frame
 
 
+
+def identify_frame(ports, original, port, lit):
+    if type(port) is not int or not 1 <= port <= len(ports) or ports[port-1] <= 0:
+        raise ValueError("Selected port has no detected LEDs")
+    if len(original) != sum(ports):
+        raise ValueError("Apply an RGB mode before identifying a port")
+    frame = list(original)
+    offset = sum(ports[:port-1])
+    frame[offset:offset+ports[port-1]] = [(0, 160, 120) if lit else (0, 0, 0)] * ports[port-1]
+    return frame
+
+
 def send_frame(hub, colors):
     if not colors:
         raise ValueError("No LEDs detected")
@@ -125,6 +137,11 @@ class Player:
     def fan_full(self):
         self.fan_manual(100)
 
+    def identify(self, port):
+        if type(port) is not int or not 1 <= port <= 10:
+            raise ValueError("Select a hub port from 1 to 10")
+        self.commands.put(("identify", port))
+
     def close(self):
         self.closing.set()
         self.commands.put(("close", None))
@@ -164,6 +181,8 @@ class Player:
         previous = None
         next_sample = 0
         last_sample = time.monotonic()
+        last_rgb = None
+        identifying = None
         try:
             while not self.closing.is_set():
                 try:
@@ -172,10 +191,25 @@ class Player:
                     command = None
                 if command == "close":
                     break
+                if command == "identify":
+                    if last_rgb is None or not ports or hub is None:
+                        self.events.put("Identify port: apply an RGB mode first so colors can be restored.")
+                    elif value > len(ports) or ports[value-1] == 0:
+                        self.events.put(f"Identify port: P{value} has no detected LEDs.")
+                    else:
+                        identifying = (value, time.monotonic(), tuple(last_rgb))
+                        self.events.put(f"Identifying P{value} for 3 seconds…")
                 if command == "stop":
+                    if identifying is not None and hub is not None:
+                        try:
+                            send_frame(hub, list(identifying[2]))
+                        except OSError as exc:
+                            self.events.put(f"Could not restore RGB after identification: {exc}")
+                        identifying = None
                     settings = None
                     self.events.put("Stopped · last frame stays lit. Use Turn off RGB to switch off.")
                 elif command == "start":
+                    identifying = None
                     settings = value
                     start = time.monotonic()
                     repeats = 0
@@ -194,6 +228,7 @@ class Player:
                         self.events.put("Connecting to hub…")
                         hub, ports = self._connect()
                         self.port_counts = tuple(ports)
+                        last_rgb = None
                         fan_owned = False
                         previous = None
                         next_sample = 0
@@ -229,8 +264,19 @@ class Player:
                             mode="Sensor unavailable · requesting 100%" if fault else
                             "Overtemperature · requesting 100%" if temp is not None and temp >= 85 else
                             "Curve active" if fan_plan[0] == "curve" else "Manual duty"))
-                    if settings is not None:
-                        send_frame(hub, make_frame(ports, settings, time.monotonic() - start))
+                    if identifying is not None:
+                        port, began, original = identifying
+                        elapsed = time.monotonic() - began
+                        if elapsed < 3:
+                            send_frame(hub, identify_frame(ports, original, port, int(elapsed * 2) % 2 == 0))
+                        else:
+                            send_frame(hub, list(original))
+                            identifying = None
+                            self.events.put(f"P{port} identified · previous RGB restored")
+                    elif settings is not None:
+                        frame = make_frame(ports, settings, time.monotonic() - start)
+                        send_frame(hub, frame)
+                        last_rgb = tuple(frame)
                         repeats += 1
                         if repeats == 1:
                             self.events.put(f"{settings.effect} · {sum(ports)} LED · {sum(n > 0 for n in ports)} ports")
@@ -250,12 +296,19 @@ class Player:
                     previous = None
                     ports = []
                     self.port_counts = ()
+                    last_rgb = None
+                    identifying = None
                     fan_owned = False
                     if hub is not None:
                         hub.close()
                         hub = None
         finally:
             if hub is not None:
+                if identifying is not None:
+                    try:
+                        send_frame(hub, list(identifying[2]))
+                    except OSError as exc:
+                        self.events.put(f"Could not restore RGB on exit: {exc}")
                 try:
                     if fan_owned:
                         self._fan_write(hub, 100)
@@ -263,3 +316,4 @@ class Player:
                     self.events.put(f"Could not request 100% on exit: {exc}. Check cooling.")
                 finally:
                     hub.close()
+

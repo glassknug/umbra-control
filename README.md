@@ -2,9 +2,32 @@
 
 Native Linux desktop control for **AsiaHorse Umbra** RGB lighting and USB fan curves.
 
-**0.4.0 preview · Developed by [glassknug](https://github.com/glassknug) · MIT license**
+**0.5.0 preview · Developed by [glassknug](https://github.com/glassknug) · MIT license**
 
 An independent community project, not affiliated with or endorsed by AsiaHorse.
+
+## Identify port and Export/Import (0.5.0 preview)
+
+### Identify a physical RGB port
+
+Apply an RGB mode once after opening the app so it knows which colors to restore. In **RGB layout**, select a device/port and choose **Identify port · blink 3 seconds**. Only that port blinks cyan/dark; other ports retain the captured colors. The previous RGB state returns automatically, including after Stop or a normal Quit during identification. Ongoing animations resume afterwards. Selecting an empty detected port reports an error without changing lighting.
+
+Identification uses the same USB worker as RGB and fan control, so temperature-based motor control keeps sampling. Starting another RGB mode cancels identification and applies the new mode. Hardware disconnection can prevent restoration; this preview needs testing on the hub.
+
+### Export and import configuration files
+
+The **Export/Import** tab exports a JSON file containing the current RGB layout (including selected-device edits) and **saved** fan profiles. Save desired profiles in Fan curves first. It does not export local sensor paths, credentials, startup settings or running controller state.
+
+To import another user's file:
+
+1. Choose the configuration JSON and inspect its RGB-group/profile summary.
+2. Review each temperature-sensor mapping. A unique matching source/label is suggested; otherwise choose a local sensor or leave the profile unmapped.
+3. Choose **Import reviewed configuration** and confirm replacement. Existing RGB layout and saved fan profiles are backed up before being replaced. If writing fails, the previous files are restored where possible; the backup location is reported.
+4. Check physical hub-port assignments, then explicitly apply RGB or a curve when ready. Unmapped fan profiles require sensor selection before applying.
+
+Import does not change active RGB/fan control or login-startup settings. The startup curve remains a separate snapshot; use the Fan curves checkbox/apply controls to deliberately update it. Backups are stored under `$XDG_CONFIG_HOME/umbra-control/backups` (default `~/.config/umbra-control/backups`). JSON is validated with a 256 KiB limit; no scripts, file paths or startup commands from an imported bundle are executed.
+
+**47 automated tests pass.** glassknug reports that port identification and configuration export/import work on Bazzite with their hub. Other hardware and firmware revisions still need testing.
 
 ## RGB layout
 
@@ -27,7 +50,7 @@ To run from a source download, choose **Quit** in any running copy first, then r
 python3 asiahorse_gui.py
 ```
 
-37 automated tests pass, covering RGB stream offsets, independent per-port effects, daisy-chain geometry and count persistence, validation, storage failure recovery and installed-module imports. glassknug has tested the interface on Bazzite; screenshots show grouped fan rendering, ARGB cable placement and matching separate RGB port-group colors on the connected hardware. Broader hardware compatibility and further effect testing remain open.
+The RGB layout tests cover RGB stream offsets, independent per-port effects, daisy-chain geometry and count persistence, validation, storage failure recovery and installed-module imports. glassknug has tested the interface on Bazzite; screenshots show grouped fan rendering, ARGB cable placement and matching separate RGB port-group colors on the connected hardware. Broader hardware compatibility and further effect testing remain open.
 
 ## Demo video
 
@@ -157,7 +180,7 @@ Developed and tested with an Umbra hub on **Bazzite Linux**. All five RGB effect
 
 USB motor-speed changes were hardware-verified at requested **100% → 75% → 100%**. Lower duty values, other hardware/firmware revisions, combined RGB/curve operation and login startup need further hardware testing. The supported UI range is 30–100%; percentages do not guarantee a particular RPM.
 
-The 0.3.3 package includes the startup dependency missing from 0.3.2. There are **37 passing automated tests**, including loading the startup module from an isolated installed copy. Automated tests do not substitute for desktop and hardware verification.
+The 0.3.3 package includes the startup dependency missing from 0.3.2. There are **47 passing automated tests**, including loading the startup module from an isolated installed copy. Automated tests do not substitute for desktop and hardware verification.
 
 ## USB protocol research
 
@@ -204,3 +227,4 @@ This removes the per-user app, launcher and login-startup setting. Saved profile
 ## License
 
 [MIT](LICENSE). Original copyright and license notices are preserved.
+

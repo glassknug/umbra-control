@@ -51,6 +51,8 @@ class RGBLayoutTab:
         ttk.Label(row,text='Effect speed ×').pack(side='left')
         self.speed_box=ttk.Spinbox(row,from_=.25,to=3,increment=.25,textvariable=self.speed,width=6);self.speed_box.pack(side='right')
         self.update_button=ttk.Button(side,text='Update selected device',command=self.update_selected);self.update_button.pack(fill='x',pady=3)
+        self.identify_button=ttk.Button(side,text='Identify port · blink 3 seconds',command=self.identify)
+        self.identify_button.pack(fill='x',pady=3)
         self.remove_button=ttk.Button(side,text='Remove selected device',command=self.remove);self.remove_button.pack(fill='x',pady=3)
         ttk.Separator(side).pack(fill='x',pady=8)
         ttk.Button(side,text='Apply layout RGB',command=self.apply).pack(fill='x',pady=3)
@@ -161,7 +163,7 @@ class RGBLayoutTab:
 
     def select(self,index):
         self.selected=index;valid=index is not None and 0<=index<len(self.devices)
-        for widget in (self.name_entry,self.color_entry,self.brightness_box,self.speed_box,self.color_button,self.update_button,self.remove_button):widget.configure(state='normal' if valid else 'disabled')
+        for widget in (self.name_entry,self.color_entry,self.brightness_box,self.speed_box,self.color_button,self.update_button,self.remove_button,self.identify_button):widget.configure(state='normal' if valid else 'disabled')
         for widget in (self.port_box,self.kind_box,self.orientation_box,self.effect_box):widget.configure(state='readonly' if valid else 'disabled')
         if valid:
             d=self.devices[index];self.choices.current(index)
@@ -241,6 +243,16 @@ class RGBLayoutTab:
             self.status.set('Applying RGB layout. Unassigned ports turn dark. Save layout to keep these settings.')
         except ValueError as exc:messagebox.showerror('Apply RGB layout',str(exc),parent=self.root)
 
+    def identify(self):
+        if self.selected is None:
+            return
+        try:
+            port=int(self.port.get())
+            self.player.identify(port)
+            self.status.set(f'Identify requested for P{port}. Apply an RGB mode first if none is active.')
+        except (ValueError,tk.TclError) as exc:
+            messagebox.showerror('Identify port',str(exc),parent=self.root)
+
     def stop(self):self.player.stop();self.status.set('Stopping RGB animation; last frame stays lit.')
 
     def poll(self):
@@ -248,3 +260,4 @@ class RGBLayoutTab:
         if counts:self.topology.set('Detected LEDs · '+ ' · '.join(f'P{i}: {n}' for i,n in enumerate(counts,1)))
         else:self.topology.set('LED counts are read from the hub when RGB starts.')
         self.root.after(1000,self.poll)
+

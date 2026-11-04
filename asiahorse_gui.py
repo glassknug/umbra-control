@@ -54,7 +54,7 @@ def main():
     def about():
         messagebox.showinfo(
             "About Umbra Control for Linux",
-            "Umbra Control for Linux · 0.4.0 preview\n\n"
+            "Umbra Control for Linux · 0.5.0 preview\n\n"
             "Project by glassknug.\n"
             "Desktop GUI, RGB effects, USB fan-control command analysis and hardware testing, "
             "temperature curves, profiles, graphs, shortcuts and menu launcher.\n\n"
@@ -203,6 +203,19 @@ def main():
     fan_tab = FanTab(root, fans, player)
     from rgb_layout_ui import RGBLayoutTab
     control_tab = RGBLayoutTab(root, control_container, player, status)
+    transfer_container = ttk.Frame(notebook)
+    transfer_canvas = tk.Canvas(transfer_container, bg="#151923", highlightthickness=0)
+    transfer_scroll = ttk.Scrollbar(transfer_container, orient="vertical", command=transfer_canvas.yview)
+    transfer_canvas.configure(yscrollcommand=transfer_scroll.set)
+    transfer_scroll.pack(side="right", fill="y")
+    transfer_canvas.pack(side="left", fill="both", expand=True)
+    transfer_frame = ttk.Frame(transfer_canvas, padding=12)
+    transfer_window = transfer_canvas.create_window(0, 0, anchor="nw", window=transfer_frame)
+    transfer_frame.bind("<Configure>", lambda _: transfer_canvas.configure(scrollregion=transfer_canvas.bbox("all")))
+    transfer_canvas.bind("<Configure>", lambda e: transfer_canvas.itemconfigure(transfer_window, width=e.width))
+    notebook.add(transfer_container, text="Export/Import")
+    from transfer_ui import TransferTab
+    transfer_tab = TransferTab(root, transfer_frame, control_tab, fan_tab)
     if "--autostart" in sys.argv:
         fan_tab.start_saved()
         root.after(100, root.iconify)
@@ -214,3 +227,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

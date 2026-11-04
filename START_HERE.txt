@@ -1,4 +1,4 @@
-Umbra Control for Linux — 0.4.0 preview
+Umbra Control for Linux — 0.5.0 preview
 Project by glassknug
 
 Quit the currently running app first. Extract all files together.
@@ -17,3 +17,8 @@ python3 install_desktop.py
 
 For daisy-chained fans, select the Fan object and choose Fan count (1–10),
 then Horizontal or Vertical. Update selected device, then Save layout.
+
+
+Identify port: apply RGB once, select a port group, then click Identify port.
+Export/Import shares RGB layout and saved fan profiles as JSON. Review sensor
+mappings before import. Import creates backups and does not activate control.
