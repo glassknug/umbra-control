@@ -27,7 +27,7 @@ To import another user's file:
 
 Import does not change active RGB/fan control or login-startup settings. The startup curve remains a separate snapshot; use the Fan curves checkbox/apply controls to deliberately update it. Backups are stored under `$XDG_CONFIG_HOME/umbra-control/backups` (default `~/.config/umbra-control/backups`). JSON is validated with a 256 KiB limit; no scripts, file paths or startup commands from an imported bundle are executed.
 
-**47 automated tests pass.** The new UI flows and identify command need desktop/hardware verification before a release.
+**47 automated tests pass.** glassknug reports that port identification and configuration export/import work on Bazzite with their hub. Other hardware and firmware revisions still need testing.
 
 ## RGB layout
 
@@ -50,7 +50,7 @@ To run from a source download, choose **Quit** in any running copy first, then r
 python3 asiahorse_gui.py
 ```
 
-37 automated tests pass, covering RGB stream offsets, independent per-port effects, daisy-chain geometry and count persistence, validation, storage failure recovery and installed-module imports. glassknug has tested the interface on Bazzite; screenshots show grouped fan rendering, ARGB cable placement and matching separate RGB port-group colors on the connected hardware. Broader hardware compatibility and further effect testing remain open.
+The RGB layout tests cover RGB stream offsets, independent per-port effects, daisy-chain geometry and count persistence, validation, storage failure recovery and installed-module imports. glassknug has tested the interface on Bazzite; screenshots show grouped fan rendering, ARGB cable placement and matching separate RGB port-group colors on the connected hardware. Broader hardware compatibility and further effect testing remain open.
 
 ## Demo video
 
@@ -180,7 +180,7 @@ Developed and tested with an Umbra hub on **Bazzite Linux**. All five RGB effect
 
 USB motor-speed changes were hardware-verified at requested **100% → 75% → 100%**. Lower duty values, other hardware/firmware revisions, combined RGB/curve operation and login startup need further hardware testing. The supported UI range is 30–100%; percentages do not guarantee a particular RPM.
 
-The 0.3.3 package includes the startup dependency missing from 0.3.2. There are **37 passing automated tests**, including loading the startup module from an isolated installed copy. Automated tests do not substitute for desktop and hardware verification.
+The 0.3.3 package includes the startup dependency missing from 0.3.2. There are **47 passing automated tests**, including loading the startup module from an isolated installed copy. Automated tests do not substitute for desktop and hardware verification.
 
 ## USB protocol research
 

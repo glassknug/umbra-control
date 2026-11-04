@@ -6,6 +6,6 @@
 - Existing saved files are backed up before replacement. Failed imports attempt rollback. Import never activates RGB, curves or login startup automatically.
 - Keep all existing RGB, fan-curve and daisy-chain layout functionality.
 
-47 automated tests pass, including identification restoration, continued motor control, portable sensor hints, strict import validation, stale-sensor rejection and multi-file rollback. Desktop and live hub verification are pending. This is a test branch, not a replacement for the published 0.4.0 preview.
+47 automated tests pass, including identification restoration, continued motor control, portable sensor hints, strict import validation, stale-sensor rejection and multi-file rollback. glassknug has tested port identification and configuration export/import successfully on Bazzite with their hub. Broader hardware and firmware compatibility remains unverified.
 
 Individual motor duty is still unverified. No speculative USB motor commands are included.
