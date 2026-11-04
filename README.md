@@ -2,9 +2,32 @@
 
 Native Linux desktop control for **AsiaHorse Umbra** RGB lighting and USB fan curves.
 
-**0.4.0 preview · Developed by [glassknug](https://github.com/glassknug) · MIT license**
+**0.5.0 preview · Developed by [glassknug](https://github.com/glassknug) · MIT license**
 
 An independent community project, not affiliated with or endorsed by AsiaHorse.
+
+## Identify port and Export/Import (0.5.0 preview)
+
+### Identify a physical RGB port
+
+Apply an RGB mode once after opening the app so it knows which colors to restore. In **RGB layout**, select a device/port and choose **Identify port · blink 3 seconds**. Only that port blinks cyan/dark; other ports retain the captured colors. The previous RGB state returns automatically, including after Stop or a normal Quit during identification. Ongoing animations resume afterwards. Selecting an empty detected port reports an error without changing lighting.
+
+Identification uses the same USB worker as RGB and fan control, so temperature-based motor control keeps sampling. Starting another RGB mode cancels identification and applies the new mode. Hardware disconnection can prevent restoration; this preview needs testing on the hub.
+
+### Export and import configuration files
+
+The **Export/Import** tab exports a JSON file containing the current RGB layout (including selected-device edits) and **saved** fan profiles. Save desired profiles in Fan curves first. It does not export local sensor paths, credentials, startup settings or running controller state.
+
+To import another user's file:
+
+1. Choose the configuration JSON and inspect its RGB-group/profile summary.
+2. Review each temperature-sensor mapping. A unique matching source/label is suggested; otherwise choose a local sensor or leave the profile unmapped.
+3. Choose **Import reviewed configuration** and confirm replacement. Existing RGB layout and saved fan profiles are backed up before being replaced. If writing fails, the previous files are restored where possible; the backup location is reported.
+4. Check physical hub-port assignments, then explicitly apply RGB or a curve when ready. Unmapped fan profiles require sensor selection before applying.
+
+Import does not change active RGB/fan control or login-startup settings. The startup curve remains a separate snapshot; use the Fan curves checkbox/apply controls to deliberately update it. Backups are stored under `$XDG_CONFIG_HOME/umbra-control/backups` (default `~/.config/umbra-control/backups`). JSON is validated with a 256 KiB limit; no scripts, file paths or startup commands from an imported bundle are executed.
+
+**47 automated tests pass.** The new UI flows and identify command need desktop/hardware verification before a release.
 
 ## RGB layout
 
@@ -204,3 +227,4 @@ This removes the per-user app, launcher and login-startup setting. Saved profile
 ## License
 
 [MIT](LICENSE). Original copyright and license notices are preserved.
+
