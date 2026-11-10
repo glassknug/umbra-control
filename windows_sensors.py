@@ -63,6 +63,7 @@ class SensorCache:
         self.lock = threading.Lock()
         self.sensors = []
         self.sample_time = None
+        self.started_at = clock()
         self.error = 'Waiting for first sensor sample'
 
     def accept(self, text):
@@ -84,6 +85,8 @@ class SensorCache:
 
     def status(self):
         with self.lock:
+            if self.sample_time is None and self.error == 'Waiting for first sensor sample' and self.clock()-self.started_at >= MAX_AGE:
+                return 'No sensor samples received. Run windows_diagnostics.py --sensors to inspect library/driver access.'
             if self.error:
                 return self.error
             if self.sample_time is None or not 0 <= self.clock()-self.sample_time < MAX_AGE:

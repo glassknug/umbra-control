@@ -46,6 +46,13 @@ class WindowsSensorTests(unittest.TestCase):
         cache.fail('disconnected');self.assertIsNone(cache.snapshot()[0].value)
         self.assertIn('disconnected',cache.status())
 
+    def test_first_sample_timeout_is_visible(self):
+        now=[0.0];cache=SensorCache(clock=lambda:now[0])
+        now[0]=6
+        self.assertIn('No sensor samples',cache.status())
+        cache.accept(sample())
+        self.assertEqual(cache.snapshot()[0].value,45)
+
     def test_reader_eof_or_bad_json_invalidates_previous_sample(self):
         for ending in (b'',b'not json\n'):
             service=SensorService(Path('.'))

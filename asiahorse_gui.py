@@ -168,6 +168,9 @@ def main():
         ttk.Button(sensor_actions,text='Choose sensor library folder…',command=choose_sensor_library).pack(side='left')
         ttk.Button(sensor_actions,text='Restart sensor reader',command=windows_sensors.restart).pack(side='left',padx=8)
         ttk.Button(sensor_actions,text='Stop sensor reader',command=windows_sensors.stop).pack(side='left')
+    # Pack status before the expanding table so Windows/DPI scaling cannot hide errors.
+    sensor_status = tk.StringVar(value='Waiting for sensor reader…')
+    ttk.Label(frame, textvariable=sensor_status, wraplength=760).pack(anchor='w',pady=(5,8))
     table_frame = ttk.Frame(frame)
     table_frame.pack(fill="both", expand=True)
     table = ttk.Treeview(table_frame, columns=("source", "sensor", "value"), show="headings")
@@ -178,8 +181,6 @@ def main():
     table.configure(yscrollcommand=scrollbar.set)
     scrollbar.pack(side="right", fill="y")
     table.pack(fill="both", expand=True)
-    sensor_status = tk.StringVar()
-    ttk.Label(frame, textvariable=sensor_status, wraplength=760).pack(anchor="w", pady=(8, 0))
 
     def refresh():
         try:

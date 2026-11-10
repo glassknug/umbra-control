@@ -1,6 +1,6 @@
 # Windows 11 preview: RGB, sensors and fan curves
 
-Experimental source branch based on Linux 0.5.0. Windows RGB and manual motor requests have been tried by the owner. The new sensor backend, automatic curves, icon/shortcut and setup helper still require native Windows testing. 63 automated tests pass on the Linux development host, including simulated Windows sensor failures. Linux release/main is unchanged.
+Experimental source branch based on Linux 0.5.0. Windows RGB and manual motor requests have been tried by the owner. The new sensor backend, automatic curves, icon/shortcut and setup helper still require native Windows testing. 64 automated tests pass on the Linux development host, including simulated Windows sensor failures. Linux release/main is unchanged.
 
 ## Install/update
 
