@@ -1,6 +1,23 @@
-# Umbra Control for Linux
+# Umbra Control
 
-**Windows 11 users:** [Download the Windows 0.6.3 preview installer](https://github.com/glassknug/umbra-control-linux/releases/tag/v0.6.3-windows-preview). It includes Python, LibreHardwareMonitor, a sensor setup guide and a **Restart as administrator** button. The installer is unsigned; see the release notes for setup and testing limitations. Windows source is on [`windows-rgb-preview`](https://github.com/glassknug/umbra-control-linux/tree/windows-rgb-preview). Linux instructions continue below.
+Desktop RGB lighting and fan control for **AsiaHorse Umbra**, with Linux and Windows versions.
+
+## Why the repository was renamed
+
+This project started as **Umbra Control for Linux** (`umbra-control-linux`). It now also has a Windows 11 preview, so the repository is called **umbra-control** to reflect both platforms and keep shared development, issues and releases together. This is the same project and repository: its history, community credits and license are preserved, and Linux support continues.
+
+Existing GitHub links to the previous repository name redirect here. Installed applications and saved settings do not need to be renamed. For an existing local Git clone, update its remote with `git remote set-url origin https://github.com/glassknug/umbra-control.git`.
+
+## Choose your download
+
+| Platform | Download | Source |
+| --- | --- | --- |
+| Windows 11 | [0.6.3 preview installer](https://github.com/glassknug/umbra-control/releases/tag/v0.6.3-windows-preview) | [`windows-rgb-preview`](https://github.com/glassknug/umbra-control/tree/windows-rgb-preview) |
+| Linux | [0.5.0 preview](https://github.com/glassknug/umbra-control/releases/tag/v0.5.0-preview) | [`main`](https://github.com/glassknug/umbra-control/tree/main) |
+
+Windows users should use the Setup.exe installer and its sensor setup guide. The Linux instructions below apply to Linux only. Both downloads are community previews; see their release notes for tested hardware and limitations.
+
+## Linux documentation
 
 Native Linux desktop control for **AsiaHorse Umbra** RGB lighting and USB fan curves.
 
@@ -56,7 +73,7 @@ The RGB layout tests cover RGB stream offsets, independent per-port effects, dai
 
 ## Demo video
 
-[Watch the Umbra Control demo (MP4, 1:06)](https://github.com/glassknug/umbra-control-linux/releases/download/v0.3.3-preview/umbra-control-demo.mp4)
+[Watch the Umbra Control demo (MP4, 1:06)](https://github.com/glassknug/umbra-control/releases/download/v0.3.3-preview/umbra-control-demo.mp4)
 
 A real-hardware demonstration of the application and the connected PC lighting. The video is attached to the preview release (approximately 40 MB).
 
