@@ -1,6 +1,6 @@
 # Windows 11 preview: RGB, sensors and fan curves
 
-Experimental source branch based on Linux 0.5.0. Windows RGB and manual motor requests have been tried by the owner. The new sensor backend, automatic curves, icon/shortcut and setup helper still require native Windows testing. 66 automated tests pass on the Linux development host, including simulated Windows sensor failures. Linux release/main is unchanged.
+Experimental source branch based on Linux 0.5.0. Windows RGB and manual motor requests have been tried by the owner. The new sensor backend, automatic curves, icon/shortcut and setup helper still require native Windows testing. 68 automated tests pass on the Linux development host, including simulated Windows sensor failures. Linux release/main is unchanged.
 
 ## Install/update
 
@@ -58,3 +58,7 @@ Existing community driver/protocol credits remain in README.md and LICENSE. Libr
 ## CPU available in LHM but missing in Umbra
 
 The sensor-only diagnostic waits up to 15 seconds for a valid CPU reading and prints the helper's actual elevation/bitness, library and PawnIO versions, read-only PawnIO device-open result, AMD module loaded state (best-effort reflection for the supported version) and raw CPU values. The probe opens/closes a device handle only; no IOCTL is sent by the access probe. These details are not exported with configurations. The helper initializes in the chosen library directory and adds that directory for dependency resolution. Do not interpret this diagnostic improvement as verified CPU compatibility.
+
+## Taskbar icon and signing
+
+Native small/large icons are now assigned to the mapped outer Tk window after startup, supplementing the .ico and AppUserModelID. This change has mocked API tests but still needs native taskbar verification; an already-pinned Python shortcut may retain its own icon. A future native executable must embed the same icon and version metadata and preserve the sensor helper subprocess behavior. The current preview is Python source and is not Authenticode-signed. See WINDOWS_SIGNING.md for signing options and requirements.

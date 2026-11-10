@@ -51,6 +51,10 @@ def main():
     root.geometry(f"940x{min(940, root.winfo_screenheight() - 90)}")
     root.minsize(860, min(860, root.winfo_screenheight() - 110))
     root.configure(bg="#151923")
+    if windows:
+        from windows_icon import set_native_icons
+        # Tk/Explorer can replace startup defaults while mapping the outer window.
+        root.after(300,lambda:set_native_icons(root,Path(__file__).with_name('umbra-icon.ico')))
     style = ttk.Style(root)
     style.theme_use("clam")
     style.configure("TFrame", background="#151923")
