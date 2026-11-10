@@ -53,6 +53,21 @@ class WindowsSensorTests(unittest.TestCase):
         cache.accept(sample())
         self.assertEqual(cache.snapshot()[0].value,45)
 
+    def test_cpu_failure_reports_helper_access_in_ui_status(self):
+        cache=SensorCache()
+        data=json.loads(sample(0));data['diagnostics']={'elevated':'False','amd_module_loaded':'False','unrelated':'omit'}
+        cache.accept(json.dumps(data))
+        self.assertIn('elevated=False',cache.status())
+        self.assertIn('loaded=False',cache.status())
+        self.assertNotIn('unrelated',cache.diagnostics)
+        self.assertIsNone(cache.snapshot()[0].value)
+
+    def test_diagnostics_never_turn_missing_value_into_temperature(self):
+        cache=SensorCache()
+        data=json.loads(sample(None));data['diagnostics']={'raw_cpu_values':'/amdcpu/0/temperature/2=45','elevated':'True'}
+        cache.accept(json.dumps(data))
+        self.assertIsNone(cache.snapshot()[0].value)
+
     def test_reader_eof_or_bad_json_invalidates_previous_sample(self):
         for ending in (b'',b'not json\n'):
             service=SensorService(Path('.'))

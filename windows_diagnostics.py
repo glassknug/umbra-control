@@ -18,9 +18,12 @@ def main():
             try:
                 for _ in range(150):
                     sensors=windows_sensors.read_sensors()
-                    if sensors or 'Waiting' not in windows_sensors.status():break
+                    cpu=cpu_temperature(sensors)
+                    if cpu and cpu.value is not None:break
+                    if not sensors and 'Waiting' not in windows_sensors.status():break
                     time.sleep(.1)
                 print(windows_sensors.status())
+                for key,value in windows_sensors.diagnostics().items():print(f'{key}: {value}')
                 for sensor in sensors:
                     print(f'{sensor.key} | {sensor.label} | {sensor.kind} | {sensor.value}')
                 cpu=cpu_temperature(sensors)

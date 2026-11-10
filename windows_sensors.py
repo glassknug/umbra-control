@@ -65,13 +65,19 @@ class SensorCache:
         self.sample_time = None
         self.started_at = clock()
         self.error = 'Waiting for first sensor sample'
+        self.diagnostics = {}
 
     def accept(self, text):
         sample = decode_sample(text)
+        details=json.loads(text).get('diagnostics',{})
+        allowed=('process_bits','elevated','pawnio_device_access','library_version','pawnio_installed','pawnio_version','amd_module_loaded','raw_cpu_values')
+        if not isinstance(details,dict):details={}
+        details={k:str(details[k])[:500] for k in allowed if k in details}
         with self.lock:
             self.sensors = sample
             self.sample_time = self.clock()
             self.error = '' if sample else 'No sensors reported; check sensor permissions and setup'
+            self.diagnostics=details
 
     def fail(self, error):
         with self.lock:
@@ -91,6 +97,9 @@ class SensorCache:
                 return self.error
             if self.sample_time is None or not 0 <= self.clock()-self.sample_time < MAX_AGE:
                 return 'Sensor samples stale; active curve requests 100%'
+            cpu=[s for s in self.sensors if s.key.startswith(('lhm:/amdcpu/','lhm:/intelcpu/')) and s.kind=='temperature']
+            if cpu and all(s.value is None for s in cpu):
+                return 'CPU reading unavailable. Helper elevated='+self.diagnostics.get('elevated','unknown')+'; PawnIO module loaded='+self.diagnostics.get('amd_module_loaded','unknown')+'. Run sensor diagnostics for details.'
             return 'LibreHardwareMonitor · read-only samples · expires after 5 seconds'
 
 
@@ -164,6 +173,11 @@ def read_sensors():
 def status():
     if _paused:return 'Sensor reader stopped; active curve requests 100%'
     return _service.cache.status() if _service else 'Choose the official LibreHardwareMonitor folder to enable Windows temperatures'
+
+
+def diagnostics():
+    if _service is None:return {}
+    with _service.cache.lock:return dict(_service.cache.diagnostics)
 
 
 def restart(folder=None):

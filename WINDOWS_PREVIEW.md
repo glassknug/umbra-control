@@ -1,6 +1,6 @@
 # Windows 11 preview: RGB, sensors and fan curves
 
-Experimental source branch based on Linux 0.5.0. Windows RGB and manual motor requests have been tried by the owner. The new sensor backend, automatic curves, icon/shortcut and setup helper still require native Windows testing. 64 automated tests pass on the Linux development host, including simulated Windows sensor failures. Linux release/main is unchanged.
+Experimental source branch based on Linux 0.5.0. Windows RGB and manual motor requests have been tried by the owner. The new sensor backend, automatic curves, icon/shortcut and setup helper still require native Windows testing. 66 automated tests pass on the Linux development host, including simulated Windows sensor failures. Linux release/main is unchanged.
 
 ## Install/update
 
@@ -54,3 +54,7 @@ Existing community driver/protocol credits remain in README.md and LICENSE. Libr
 - https://github.com/LibreHardwareMonitor/LibreHardwareMonitor
 - https://pythonnet.github.io/pythonnet/python.html
 - https://github.com/trezor/cython-hidapi
+
+## CPU available in LHM but missing in Umbra
+
+The sensor-only diagnostic waits up to 15 seconds for a valid CPU reading and prints the helper's actual elevation/bitness, library and PawnIO versions, read-only PawnIO device-open result, AMD module loaded state (best-effort reflection for the supported version) and raw CPU values. The probe opens/closes a device handle only; no IOCTL is sent by the access probe. These details are not exported with configurations. The helper initializes in the chosen library directory and adds that directory for dependency resolution. Do not interpret this diagnostic improvement as verified CPU compatibility.
