@@ -28,3 +28,13 @@ class WindowsShortcutTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder,patch.object(sys,'platform','win32'),patch('windows_shortcut.subprocess.run') as run:
             with self.assertRaises(OSError):windows_shortcut.create(folder)
             run.assert_not_called()
+
+    def test_packaged_shortcut_targets_branded_executable(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);(root/'UmbraControl.exe').touch()
+            with patch.object(sys,'platform','win32'),patch.dict(os.environ,SystemRoot='C:/Windows'),patch('windows_shortcut.subprocess.run',return_value=Mock(returncode=0)) as run:
+                windows_shortcut.create(root)
+            env=run.call_args.kwargs['env']
+            self.assertEqual(env['UMBRA_SHORTCUT_TARGET'],str(root/'UmbraControl.exe'))
+            self.assertEqual(env['UMBRA_SHORTCUT_ICON'],str(root/'UmbraControl.exe'))
+            self.assertEqual(env['UMBRA_SHORTCUT_ARGS'],'')

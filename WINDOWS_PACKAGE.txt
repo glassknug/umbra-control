@@ -1,0 +1,37 @@
+Umbra Control for Windows - 0.6.0 preview (unsigned)
+
+Extract this entire ZIP to a permanent folder, then open UmbraControl.exe.
+Keep sensor-helper and _internal beside it. Moving only the EXE will break it.
+Double-click Create desktop shortcut.cmd for an icon-bearing desktop shortcut.
+Unpin an old Python shortcut and pin the new Umbra executable if desired.
+Python is bundled; a separate Python installation is not required.
+
+For CPU temperature access, right-click UmbraControl.exe and Run as administrator.
+This is an unsigned preview: it has not been signed or endorsed by Microsoft.
+
+Sensor setup remains a separate prerequisite:
+Download LibreHardwareMonitor.zip (.NET Framework build) from the official
+https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases/tag/v0.9.6
+Extract the whole library folder, run its official app for PawnIO setup, and
+confirm CPU temperature works there. In Umbra choose that sensor-library folder.
+LHM binaries and PawnIO are not included or silently installed by this package.
+If Windows blocks the downloaded DLLs, review their source and use file Properties
+to unblock the official download before extracting.
+
+Close other hub controllers. Test RGB first, then select Core (Tctl/Tdie) in
+Fan curves. Windows curves are limited to 75-100% requested hub-wide duty.
+Missing/stale readings or selected temperature >=85 C request 100%.
+Requests are not measured RPM. Crashes, sleep or USB loss cannot guarantee recovery.
+Test Stop sensor reader while a curve runs and verify a 100% request.
+Quit exits; the window close button minimizes. Login startup is disabled.
+
+User configuration is retained in the same locations as the source preview.
+Logs: %LOCALAPPDATA%\UmbraControl\windows.log
+BUILD_CHECKS.json records packaging checks, not physical hardware certification.
+The SHA256 sidecar detects a changed download; it is not a digital signature.
+
+Original Linux driver: ToeTagger / LuxDev372.
+Earlier RGB research: maihcx and u/idk_a_name_wtf.
+Application development: glassknug. MIT licensed; see LICENSE.
+LibreHardwareMonitor is a separately downloaded MPL-2.0 dependency; retain its notices.
+Bundled dependencies have notices under THIRD_PARTY.

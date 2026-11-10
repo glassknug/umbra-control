@@ -103,6 +103,16 @@ class SensorCache:
             return 'LibreHardwareMonitor · read-only samples · expires after 5 seconds'
 
 
+def helper_command(folder):
+    executable=Path(sys.executable)
+    if getattr(sys,'frozen',False):
+        helper=executable.parent/'sensor-helper'/'UmbraSensorHelper.exe'
+        if not helper.is_file():raise OSError('Packaged sensor helper missing. Extract the entire application ZIP.')
+        return [str(helper),str(folder)]
+    if executable.name.lower()=='pythonw.exe':executable=executable.with_name('python.exe')
+    return [str(executable),'-u',str(Path(__file__).with_name('windows_sensor_helper.py')),str(folder)]
+
+
 class SensorService:
     def __init__(self, folder):
         self.cache = SensorCache()
@@ -111,12 +121,8 @@ class SensorService:
         self.folder = folder
 
     def start(self):
-        helper = Path(__file__).with_name('windows_sensor_helper.py')
         try:
-            executable = Path(sys.executable)
-            if executable.name.lower() == 'pythonw.exe':
-                executable = executable.with_name('python.exe')
-            self.process = subprocess.Popen([str(executable),'-u',str(helper),str(self.folder)],
+            self.process = subprocess.Popen(helper_command(self.folder),
                 stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,
                 creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
             self.thread = threading.Thread(target=self._read,daemon=True)

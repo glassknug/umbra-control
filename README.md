@@ -8,7 +8,7 @@ An independent community project, not affiliated with or endorsed by AsiaHorse.
 
 ## Experimental Windows 11 RGB preview
 
-Windows support is being tested on the separate `windows-rgb-preview` branch. See [WINDOWS_PREVIEW.md](WINDOWS_PREVIEW.md) for setup, sensor dependencies and diagnostics. The owner reports working Windows RGB and manual control. This revision adds a Windows icon/Desktop shortcut and an isolated LibreHardwareMonitor sensor backend, with experimental temperature curves limited to 75–100%. Missing/stale sensors request full duty; login startup remains disabled. **68 automated tests pass** on the Linux host; the new native Windows sensor/curve flow still needs verification. The Linux release remains unchanged.
+Windows support is being tested on the separate `windows-rgb-preview` branch. See [WINDOWS_PREVIEW.md](WINDOWS_PREVIEW.md) for setup, sensor dependencies and diagnostics. The owner reports working Windows RGB and manual control. This revision adds a Windows icon/Desktop shortcut and an isolated LibreHardwareMonitor sensor backend, with experimental temperature curves limited to 75–100%. Missing/stale sensors request full duty; login startup remains disabled. **72 automated tests pass** on the Linux host; the new native Windows sensor/curve flow still needs verification. The Linux release remains unchanged.
 
 ## Identify port and Export/Import (0.5.0 preview)
 

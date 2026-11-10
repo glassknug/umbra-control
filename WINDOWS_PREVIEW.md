@@ -1,6 +1,6 @@
 # Windows 11 preview: RGB, sensors and fan curves
 
-Experimental source branch based on Linux 0.5.0. Windows RGB and manual motor requests have been tried by the owner. The new sensor backend, automatic curves, icon/shortcut and setup helper still require native Windows testing. 68 automated tests pass on the Linux development host, including simulated Windows sensor failures. Linux release/main is unchanged.
+Experimental source branch based on Linux 0.5.0. Windows RGB and manual motor requests have been tried by the owner. The new sensor backend, automatic curves, icon/shortcut and setup helper still require native Windows testing. 72 automated tests pass on the Linux development host, including simulated Windows sensor failures. Linux release/main is unchanged.
 
 ## Install/update
 
@@ -62,3 +62,9 @@ The sensor-only diagnostic waits up to 15 seconds for a valid CPU reading and pr
 ## Taskbar icon and signing
 
 Native small/large icons are now assigned to the mapped outer Tk window after startup, supplementing the .ico and AppUserModelID. This change has mocked API tests but still needs native taskbar verification; an already-pinned Python shortcut may retain its own icon. A future native executable must embed the same icon and version metadata and preserve the sensor helper subprocess behavior. The current preview is Python source and is not Authenticode-signed. See WINDOWS_SIGNING.md for signing options and requirements.
+
+## Native EXE package (0.6.0 preview, unsigned)
+
+`build_windows.cmd` builds on Windows with Python 3.12, using an isolated `.build-venv`. It creates `dist/UmbraControl-Windows-preview.zip` and a SHA256 sidecar. An equivalent Windows Actions workflow builds on pushes to the preview branch and uploads the archive as a test artifact. Each build smoke-tests the actual GUI EXE (Tk, imports and icons without opening HID) and helper EXE (.NET runtime import). These checks do not test a physical hub, CPU sensor or a clean Windows 11 installation.
+
+Extract the whole native ZIP. Run `UmbraControl.exe` (right-click Run as administrator for CPU sensor access). `Create desktop shortcut.cmd` creates a shortcut targeting that branded executable. Python is bundled, but LibreHardwareMonitor/PawnIO remain separate prerequisites. User configuration and logs retain their locations. Signing is not performed; the SHA256 sidecar is an integrity checksum only.

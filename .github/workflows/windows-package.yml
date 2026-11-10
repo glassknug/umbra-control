@@ -1,0 +1,42 @@
+name: Windows preview package
+on:
+  push:
+    branches: [windows-rgb-preview]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - name: Install build dependencies
+        run: python -m pip install --only-binary=:all: -r requirements-build-windows.txt
+      - name: Windows transport and sensor tests
+        shell: pwsh
+        run: |
+          python -m unittest discover -s tests -p test_windows_hid.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s tests -p test_windows_sensors.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s tests -p test_windows_icon.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s tests -p test_windows_shortcut.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s tests -p test_windows_package.py
+          exit $LASTEXITCODE
+      - name: Build and smoke-test actual Windows executables
+        run: python build_windows.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UmbraControl-Windows-preview
+          path: |
+            dist/UmbraControl-Windows-preview.zip
+            dist/UmbraControl-Windows-preview.sha256
+          if-no-files-found: error
+          retention-days: 14

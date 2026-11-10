@@ -62,6 +62,13 @@ def main():
     dll_directory=None
     try:
         if sys.platform != 'win32':raise RuntimeError('Windows sensor helper requires Windows')
+        if sys.argv[1:] == ['--self-test']:
+            from pythonnet import load
+            load('netfx')
+            import clr
+            from System import Environment
+            print(json.dumps({'self_test':'passed','runtime':str(Environment.Version)}),flush=True)
+            return 0
         folder=Path(sys.argv[1]).resolve()
         if not (folder/'LibreHardwareMonitorLib.dll').is_file():raise RuntimeError('LibreHardwareMonitor library missing')
         os.chdir(folder)
