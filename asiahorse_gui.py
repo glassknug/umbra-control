@@ -73,7 +73,7 @@ def main():
     def about():
         messagebox.showinfo(
             "About Umbra Control",
-            ("Umbra Control · Windows 0.6.1 preview\n\n" if windows else "Umbra Control for Linux · 0.5.0 preview\n\n") +
+            ("Umbra Control · Windows 0.6.2 preview\n\n" if windows else "Umbra Control for Linux · 0.5.0 preview\n\n") +
             "Created by glassknug.\n\n"
             "RGB effects and a visual PC layout with fan groups, LED strips and ARGB cables.\n"
             "Horizontal/vertical fan groups, port identification and configuration export/import.\n"
@@ -171,7 +171,8 @@ def main():
                 windows_sensors.restart(folder)
             except (OSError,ValueError) as exc:
                 messagebox.showerror('Windows sensor setup',str(exc),parent=root)
-        ttk.Button(sensor_actions,text='Choose sensor library folder…',command=choose_sensor_library).pack(side='left')
+        from windows_setup import show as show_sensor_setup
+        ttk.Button(sensor_actions,text='Sensor setup…',command=lambda:show_sensor_setup(root)).pack(side='left')
         ttk.Button(sensor_actions,text='Restart sensor reader',command=windows_sensors.restart).pack(side='left',padx=8)
         ttk.Button(sensor_actions,text='Stop sensor reader',command=windows_sensors.stop).pack(side='left')
     # Pack status before the expanding table so Windows/DPI scaling cannot hide errors.

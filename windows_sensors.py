@@ -19,11 +19,14 @@ def config_path():
 
 
 def library_directory():
+    from windows_setup import bundled_library
     try:
         folder = Path(config_path().read_text(encoding='utf-8').strip())
         return folder if (folder / 'LibreHardwareMonitorLib.dll').is_file() else None
     except (OSError, ValueError):
-        return None
+        pass
+    from windows_setup import bundled_library
+    return bundled_library()
 
 
 def decode_sample(text):

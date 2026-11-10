@@ -1,3 +1,11 @@
+## Installer preview (0.6.2)
+
+Use `UmbraControl-Windows-0.6.2-Setup.exe` for normal installation. It installs per user, creates Start menu/optional desktop shortcuts and supports uninstallation. The build pins the unmodified LibreHardwareMonitor 0.9.6 Framework archive by SHA256 and includes its MPL license, upstream notices and source link. The installed app discovers its bundled library automatically when no custom library is configured.
+
+**Sensor setup…** explains PawnIO and administrator access and opens the included upstream tool for the user to review driver installation. No driver or startup task is silently installed. Close the app and use **Run as administrator** for CPU readings and startup changes. Disable login startup before uninstalling/moving the app. Installed configuration is preserved. The installer is unsigned; SmartScreen reputation is separate from successful installation.
+
+CI installs the actual generated installer to a temporary per-user folder, smoke-tests the installed GUI and uninstalls it. This does not test USB hardware, driver installation or real login startup. Older portable/source instructions below remain for advanced usage.
+
 # Windows 11 preview: RGB, sensors and fan curves
 
 Experimental source branch based on Linux 0.5.0. Windows RGB and manual motor requests have been tried by the owner. The new sensor backend, automatic curves, icon/shortcut and setup helper still require native Windows testing. 78 automated tests pass on the Linux development host, including simulated Windows sensor failures. Linux release/main is unchanged.

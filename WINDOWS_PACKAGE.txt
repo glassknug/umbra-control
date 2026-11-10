@@ -1,42 +1,24 @@
-Umbra Control for Windows - 0.6.1 preview (unsigned)
+Umbra Control for Windows — 0.6.2 preview
 
-Extract this entire ZIP to a permanent folder, then open UmbraControl.exe.
-Keep sensor-helper and _internal beside it. Moving only the EXE will break it.
-Double-click Create desktop shortcut.cmd for an icon-bearing desktop shortcut.
-Unpin an old Python shortcut and pin the new Umbra executable if desired.
-Python is bundled; a separate Python installation is not required.
+Recommended: run UmbraControl-Windows-0.6.2-Setup.exe.
+Setup installs for the current user, creates a Start menu shortcut, and optionally
+adds a desktop shortcut. Python is included. Do not run from inside an archive.
+Quit the old app before installing. Keep the install directory in place.
 
-For CPU temperature access, right-click UmbraControl.exe and Run as administrator.
-This is an unsigned preview: it has not been signed or endorsed by Microsoft.
+LibreHardwareMonitor 0.9.6 (unmodified) is included with its license and source
+link in LibreHardwareMonitor/SOURCE.txt. No manual DLL folder download is needed.
+Open Sensor setup in Umbra Control. Open the included LibreHardwareMonitor tool
+and review its PawnIO driver installation prompt if required. Drivers are never
+installed silently. Close Umbra Control and use Run as administrator for CPU
+sensor access and enabling/disabling login startup. RGB works without this step.
 
-Sensor setup remains a separate prerequisite:
-Download LibreHardwareMonitor.zip (.NET Framework build) from the official
-https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases/tag/v0.9.6
-Extract the whole library folder, run its official app for PawnIO setup, and
-confirm CPU temperature works there. In Umbra choose that sensor-library folder.
-LHM binaries and PawnIO are not included or silently installed by this package.
-If Windows blocks the downloaded DLLs, review their source and use file Properties
-to unblock the official download before extracting.
+Choose the CPU sensor under Fan curves before applying. Windows duty is 50–100%.
+Missing/stale sensor data requests 100%. Motor speed is shared across the hub.
+Login startup is opt-in and uses a saved curve. Disable login startup in the app
+before uninstalling or moving it. Uninstallation preserves configuration files.
 
-Close other hub controllers. Test RGB first, then select Core (Tctl/Tdie) in
-Fan curves. Windows curves are limited to 50-100% requested hub-wide duty.
-Missing/stale readings or selected temperature >=85 C request 100%.
-Requests are not measured RPM. Crashes, sleep or USB loss cannot guarantee recovery.
-Test Stop sensor reader while a curve runs and verify a 100% request.
-Quit exits; the window close button minimizes. Login startup is opt-in via the Fan curves checkbox. It saves a curve snapshot
-and creates a highest-privilege interactive task for your own account. Enabling
-or disabling requires running Umbra as administrator. It starts minimized about
-30 seconds after login and applies the saved curve; no password is stored.
-Keep the app in a permanent folder and re-enable startup if it moves.
-Uncheck startup before uninstalling the portable app.
-
-User configuration is retained in the same locations as the source preview.
-Logs: %LOCALAPPDATA%\UmbraControl\windows.log
-BUILD_CHECKS.json records packaging checks, not physical hardware certification.
-The SHA256 sidecar detects a changed download; it is not a digital signature.
-
-Original Linux driver: ToeTagger / LuxDev372.
-Earlier RGB research: maihcx and u/idk_a_name_wtf.
-Application development: glassknug. MIT licensed; see LICENSE.
-LibreHardwareMonitor is a separately downloaded MPL-2.0 dependency; retain its notices.
-Bundled dependencies have notices under THIRD_PARTY.
+The installer writes its bundled files directly; it does not change Windows trust
+settings or run Unblock-File. The portable ZIP remains an advanced option and may
+need manual downloaded-file unblocking. This preview is unsigned; Windows may
+show SmartScreen warnings. See WINDOWS_SIGNING.md. Hardware and first-login
+behavior need real Windows 11 testing. Close other hub controllers before use.

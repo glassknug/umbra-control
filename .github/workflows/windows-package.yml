@@ -32,7 +32,13 @@ jobs:
           python -m unittest discover -s tests -p test_windows_package.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest discover -s tests -p test_windows_startup.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s tests -p test_windows_setup.py
           exit $LASTEXITCODE
+      - name: Ensure Inno Setup compiler
+        shell: pwsh
+        run: |
+          if (!(Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup --version=6.4.3 --yes --no-progress }
       - name: Build and smoke-test actual Windows executables
         run: python build_windows.py
       - uses: actions/upload-artifact@v4
@@ -41,5 +47,7 @@ jobs:
           path: |
             dist/UmbraControl-Windows-preview.zip
             dist/UmbraControl-Windows-preview.sha256
+            dist/UmbraControl-Windows-0.6.2-Setup.exe
+            dist/UmbraControl-Windows-0.6.2-Setup.sha256
           if-no-files-found: error
           retention-days: 14

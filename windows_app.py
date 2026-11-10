@@ -13,6 +13,7 @@ def self_test(output):
         import asiahorse_gui, fan_ui, rgb_layout_ui, transfer_ui
         from windows_icon import set_native_icons
         import windows_sensors
+        import windows_setup
         root=tk.Tk()
         try:
             root.title('Umbra packaging self-test')
