@@ -1,0 +1,37 @@
+name: Publish tested Windows preview
+on:
+  push:
+    branches: [windows-rgb-preview]
+    paths: [.github/workflows/publish-windows.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: windows-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Retrieve verified package and publish existing draft
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $run = gh api repos/$env:GH_REPO/actions/runs/42917946274 | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0 -or $run.conclusion -ne 'success' -or $run.head_sha -ne '10d54d45bddc6c671ea26ebb716c7fc72479a826') { throw 'Verified Windows build is not successful' }
+          gh run download 42917946274 --repo $env:GH_REPO --name UmbraControl-Windows-preview --dir package
+          if ($LASTEXITCODE -ne 0) { throw 'Artifact download failed' }
+          foreach ($name in @('UmbraControl-Windows-0.6.3-Setup.exe','UmbraControl-Windows-preview.zip')) {
+            $sidecar = [IO.Path]::ChangeExtension($name, '.sha256')
+            $expected = ((Get-Content -LiteralPath "package/$sidecar" -Raw).Trim() -split '\s+')[0]
+            if ((Get-FileHash -LiteralPath "package/$name" -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) { throw "Checksum mismatch: $name" }
+          }
+          gh release upload v0.6.3-windows-preview package/UmbraControl-Windows-0.6.3-Setup.exe package/UmbraControl-Windows-0.6.3-Setup.sha256 package/UmbraControl-Windows-preview.zip package/UmbraControl-Windows-preview.sha256 --repo $env:GH_REPO --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Release upload failed' }
+          gh release edit v0.6.3-windows-preview --repo $env:GH_REPO --target 10d54d45bddc6c671ea26ebb716c7fc72479a826 --prerelease --latest=false --draft=false
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }
+          gh release view v0.6.3-windows-preview --repo $env:GH_REPO --json url,isDraft,isPrerelease,assets
+          if ($LASTEXITCODE -ne 0) { throw 'Release verification failed' }
