@@ -22,10 +22,10 @@ def library_directory():
     from windows_setup import bundled_library
     try:
         folder = Path(config_path().read_text(encoding='utf-8').strip())
-        return folder if (folder / 'LibreHardwareMonitorLib.dll').is_file() else None
+        if (folder / 'LibreHardwareMonitorLib.dll').is_file():
+            return folder
     except (OSError, ValueError):
         pass
-    from windows_setup import bundled_library
     return bundled_library()
 
 

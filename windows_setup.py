@@ -1,7 +1,6 @@
 """Guided sensor setup; never installs drivers or changes file trust silently."""
 import os
 from pathlib import Path
-import subprocess
 import sys
 import webbrowser
 

@@ -18,6 +18,13 @@ class WindowsSetupTests(unittest.TestCase):
                 self.assertEqual(bundled_library(),lib)
             with patch.object(sys,'frozen',False,create=True):self.assertIsNone(bundled_library())
 
+    def test_stale_library_selection_falls_back_to_bundle(self):
+        import windows_sensors
+        with tempfile.TemporaryDirectory() as temporary:
+            config=Path(temporary)/'sensor-directory.txt';config.write_text(str(Path(temporary)/'removed-download'))
+            with patch.object(windows_sensors,'config_path',return_value=config),patch('windows_setup.bundled_library',return_value=Path('bundled')):
+                self.assertEqual(windows_sensors.library_directory(),Path('bundled'))
+
     def test_wrong_dependency_hash_is_rejected_before_extraction(self):
         with tempfile.TemporaryDirectory() as temporary,patch.object(deps.urllib.request,'urlopen',return_value=io.BytesIO(b'wrong')):
             with self.assertRaisesRegex(RuntimeError,'checksum'):deps.install_sensor_bundle(temporary)

@@ -25,6 +25,8 @@ def self_test(output):
             assert image.width()>0
         finally:root.destroy()
         command=windows_sensors.helper_command('unused-in-self-test')
+        if getattr(sys, 'frozen', False) and windows_setup.bundled_library() is None:
+            raise RuntimeError('Bundled sensor library missing')
         result.update(passed=True,frozen=bool(getattr(sys,'frozen',False)),helper=command[0])
     except Exception:
         result['error']=traceback.format_exc()
