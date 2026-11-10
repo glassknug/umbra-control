@@ -13,6 +13,9 @@ def paths():
 
 
 def load():
+    if sys.platform == 'win32':
+        from windows_startup import load as windows_load
+        return windows_load()
     config, entry = paths()
     if not entry.exists() or not config.exists():
         return None
@@ -21,7 +24,8 @@ def load():
 
 def configure(profile):
     if sys.platform == 'win32':
-        raise ValueError('Login startup is not supported in this Windows preview')
+        from windows_startup import configure as windows_configure
+        return windows_configure(profile)
     config, entry = paths()
     if profile is None:
         entry.unlink(missing_ok=True)

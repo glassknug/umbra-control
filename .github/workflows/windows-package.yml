@@ -30,6 +30,8 @@ jobs:
           python -m unittest discover -s tests -p test_windows_shortcut.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest discover -s tests -p test_windows_package.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s tests -p test_windows_startup.py
           exit $LASTEXITCODE
       - name: Build and smoke-test actual Windows executables
         run: python build_windows.py

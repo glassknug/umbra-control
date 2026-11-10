@@ -55,22 +55,24 @@ class WindowsHIDTests(unittest.TestCase):
             player.fan_manual(75); player.fan_full()
             self.assertEqual(player.commands.get_nowait(),('fan_manual',75.0))
             self.assertEqual(player.commands.get_nowait(),('fan_manual',100.0))
+            player.fan_manual(50)
+            self.assertEqual(player.commands.get_nowait(),('fan_manual',50.0))
             player.fan_manual(80)
             self.assertEqual(player.commands.get_nowait(),('fan_manual',80.0))
-            for value in (30,74,101,float('nan')):
+            for value in (30,49,101,float('nan')):
                 with self.assertRaises(ValueError): player.fan_manual(value)
             with self.assertRaises(ValueError): player.fan_curve([(30,50),(80,100)],'sensor')
-            with self.assertRaises(ValueError): player.fan_curve([(30,50),(80,100)],'lhm:/amdcpu/0/temperature/0')
-            player.fan_curve([(30,75),(80,100)],'lhm:/amdcpu/0/temperature/0')
+            with self.assertRaises(ValueError): player.fan_curve([(30,49),(80,100)],'lhm:/amdcpu/0/temperature/0')
+            player.fan_curve([(30,50),(80,100)],'lhm:/amdcpu/0/temperature/0')
             self.assertEqual(player.commands.get_nowait()[0],'fan_curve')
-            with self.assertRaises(OSError): Player._fan_write(Mock(),74)
+            with self.assertRaises(OSError): Player._fan_write(Mock(),49)
 
     def test_motor_claim_packets_and_failed_write(self):
         with patch.object(sys,'platform','win32'),patch.object(usb,'write',return_value=65) as write:
             h=object()
-            Player._fan_write(h,75,True)
+            Player._fan_write(h,50,True)
             self.assertEqual([call.args[1] for call in write.call_args_list],
-                             [usb.native(bytes(b)) for b in ([251,100],[8,1],[251,75])])
+                             [usb.native(bytes(b)) for b in ([251,100],[8,1],[251,50])])
             write.return_value=64
             with self.assertRaises(OSError): Player._fan_write(h,100)
 

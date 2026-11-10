@@ -1,6 +1,6 @@
 # Windows 11 preview: RGB, sensors and fan curves
 
-Experimental source branch based on Linux 0.5.0. Windows RGB and manual motor requests have been tried by the owner. The new sensor backend, automatic curves, icon/shortcut and setup helper still require native Windows testing. 72 automated tests pass on the Linux development host, including simulated Windows sensor failures. Linux release/main is unchanged.
+Experimental source branch based on Linux 0.5.0. Windows RGB and manual motor requests have been tried by the owner. The new sensor backend, automatic curves, icon/shortcut and setup helper still require native Windows testing. 78 automated tests pass on the Linux development host, including simulated Windows sensor failures. Linux release/main is unchanged.
 
 ## Install/update
 
@@ -31,11 +31,11 @@ That mode does not open the Umbra HID device or send motor commands. If testing 
 
 First verify that the selected CPU reading tracks LibreHardwareMonitor. In **Fan curves**, use **Refresh sensors**, select that specific sensor, and start with `35:75, 60:85, 80:100`. Save the profile if desired, then Apply curve. Starting the app or choosing a library does not activate motor control.
 
-- Windows requests and all curve points are restricted to **75–100%**. Existing imported curves below 75% must be edited before activation. Linux retains 30–100%.
+- Windows requests and all curve points are restricted to **50–100%**. Existing imported curves below 50% must be edited before activation. Linux retains 30–100%.
 - Missing, invalid or >=5-second-old samples, or a selected temperature >=85 °C, request 100%. CPU readings of zero are treated as unavailable. Check again within the worker's one-second control cycle.
 - Increases are immediate; decreases are limited to 2 percentage points/second. A 100% to 75% transition takes roughly 13 seconds.
 - Use **Stop sensor reader** while a curve is active: it should show unavailable and request 100%. Observe cooling; a requested duty is not proof of physical RPM.
-- Quit requests 100% after motor control. Crash, sleep or USB loss cannot guarantee recovery. Login startup remains disabled on Windows.
+- Quit requests 100% after motor control. Crash, sleep or USB loss cannot guarantee recovery. Login startup is available as an opt-in scheduled task; see below.
 - Fan control is hub-wide, never individual per port. Imported profiles require local sensor mapping; nothing imported activates automatically.
 
 ## RGB diagnostics
@@ -63,8 +63,16 @@ The sensor-only diagnostic waits up to 15 seconds for a valid CPU reading and pr
 
 Native small/large icons are now assigned to the mapped outer Tk window after startup, supplementing the .ico and AppUserModelID. This change has mocked API tests but still needs native taskbar verification; an already-pinned Python shortcut may retain its own icon. A future native executable must embed the same icon and version metadata and preserve the sensor helper subprocess behavior. The current preview is Python source and is not Authenticode-signed. See WINDOWS_SIGNING.md for signing options and requirements.
 
-## Native EXE package (0.6.0 preview, unsigned)
+## Native EXE package (0.6.1 preview, unsigned)
 
 `build_windows.cmd` builds on Windows with Python 3.12, using an isolated `.build-venv`. It creates `dist/UmbraControl-Windows-preview.zip` and a SHA256 sidecar. An equivalent Windows Actions workflow builds on pushes to the preview branch and uploads the archive as a test artifact. Each build smoke-tests the actual GUI EXE (Tk, imports and icons without opening HID) and helper EXE (.NET runtime import). These checks do not test a physical hub, CPU sensor or a clean Windows 11 installation.
 
 Extract the whole native ZIP. Run `UmbraControl.exe` (right-click Run as administrator for CPU sensor access). `Create desktop shortcut.cmd` creates a shortcut targeting that branded executable. Python is bundled, but LibreHardwareMonitor/PawnIO remain separate prerequisites. User configuration and logs retain their locations. Signing is not performed; the SHA256 sidecar is an integrity checksum only.
+
+## Windows login startup
+
+After selecting and applying a valid local-sensor curve, check **Start minimized and apply this curve at login**. Run Umbra as administrator to enable or disable this feature. It stores a separate snapshot of the curve and registers `UmbraControl-<current-user-SID>` in the root Task Scheduler folder for that user only: interactive logon, highest privileges, a 30-second logon delay, no saved credentials, no runtime time limit and IgnoreNew for duplicate task launches. The app's existing per-user lock also prevents a second copy. Normal launches still do not activate curves automatically.
+
+Reapply to update the snapshot. Unchecking removes this task and the startup snapshot. Manual duty changes do not disable the saved login curve. Move the package to a permanent folder before enabling; re-enable if you later move it. Config writes roll back if registration fails. Disabled/deleted tasks are not reported as enabled.
+
+At login, missing or stale sensor data requests 100% until usable readings arrive. Test an actual sign-out/sign-in on Windows 11, wait about 30 seconds, restore the minimized app and confirm the saved curve/sensor. Then confirm unchecking prevents the next login launch. These login tests are not performed by CI. The previous high-level banner has been removed; preview/version details remain in About and package metadata.

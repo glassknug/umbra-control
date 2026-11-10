@@ -125,16 +125,16 @@ class Player:
 
     def fan_manual(self, percent):
         percent = float(percent)
-        if usb.sys.platform == 'win32' and not 75 <= percent <= 100:
-            raise ValueError('Windows motor preview supports 75–100% requests')
+        if usb.sys.platform == 'win32' and not 50 <= percent <= 100:
+            raise ValueError('Windows motor preview supports 50–100% requests')
         if not 30 <= percent <= 100:
             raise ValueError("Fan duty must be 30–100%")
         self.commands.put(("fan_manual", percent))
 
     def fan_curve(self, points, sensor):
         points = validate_points(points)
-        if usb.sys.platform == 'win32' and (not isinstance(sensor,str) or not sensor.startswith('lhm:/') or any(p < 75 for _,p in points)):
-            raise ValueError('Windows curves require a LibreHardwareMonitor sensor and 75–100% duty points')
+        if usb.sys.platform == 'win32' and (not isinstance(sensor,str) or not sensor.startswith('lhm:/') or any(p < 50 for _,p in points)):
+            raise ValueError('Windows curves require a LibreHardwareMonitor sensor and 50–100% duty points')
         if not sensor:
             raise ValueError("Select a temperature sensor first")
         self.commands.put(("fan_curve", (points, sensor)))
@@ -167,8 +167,8 @@ class Player:
 
     @staticmethod
     def _fan_write(hub, percent, claim=False):
-        if usb.sys.platform == 'win32' and not 75 <= percent <= 100:
-            raise OSError('Windows motor preview is limited to 75–100%')
+        if usb.sys.platform == 'win32' and not 50 <= percent <= 100:
+            raise OSError('Windows motor preview is limited to 50–100%')
         def write(body):
             if usb.write(hub, usb.native(bytes(body))) != usb.PAYLOAD + 1:
                 raise OSError("Incomplete fan-control write")

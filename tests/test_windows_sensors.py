@@ -90,8 +90,8 @@ class WindowsSensorTests(unittest.TestCase):
         with patch.object(sys,'platform','win32'),patch('effects.usb.open_hub',return_value=h),patch('effects.usb.write',return_value=65) as write,patch('effects.read_sensors',side_effect=cache.snapshot):
             p=Player()
             try:
-                p.fan_curve([(35,75),(80,100)],'lhm:/amdcpu/0/temperature/2')
-                self.assertEqual(p.fan_events.get(timeout=2)['duty'],75)
+                p.fan_curve([(35,50),(80,100)],'lhm:/amdcpu/0/temperature/2')
+                self.assertEqual(p.fan_events.get(timeout=2)['duty'],50)
                 now[0]=6
                 event=p.fan_events.get(timeout=3)
                 self.assertEqual(event['duty'],100);self.assertIn('unavailable',event['mode'])
@@ -99,9 +99,11 @@ class WindowsSensorTests(unittest.TestCase):
             self.assertFalse(p.thread.is_alive())
             self.assertEqual(write.call_args.args[1][4:6],bytes([251,100]))
 
-    def test_windows_startup_stays_disabled(self):
+    def test_windows_startup_routes_to_windows_backend(self):
         import startup
-        with patch.object(sys,'platform','win32'),self.assertRaises(ValueError):startup.configure(None)
+        with patch.object(sys,'platform','win32'),patch('windows_startup.configure') as configure:
+            startup.configure(None)
+            configure.assert_called_once_with(None)
 
     def test_paused_reader_does_not_restart_itself(self):
         import windows_sensors as ws

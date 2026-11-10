@@ -86,8 +86,6 @@ def main():
 
     ttk.Button(header, text="About", command=about).pack(side="right")
     ttk.Label(frame, text="Lighting and system monitoring").pack(anchor="w", pady=(3, 20))
-    if windows:
-        ttk.Label(frame, text="Experimental Windows preview · curves: 75–100% with LibreHardwareMonitor. Login startup is disabled. Close other controllers before applying.", wraplength=820).pack(anchor='w', pady=(0, 10))
     notebook = ttk.Notebook(frame)
     notebook.pack(fill="both", expand=True, pady=(0, 6))
     lighting = ttk.Frame(notebook, padding=12)
@@ -259,7 +257,7 @@ def main():
     notebook.add(transfer_container, text="Export/Import")
     from transfer_ui import TransferTab
     transfer_tab = TransferTab(root, transfer_frame, control_tab, fan_tab)
-    if "--autostart" in sys.argv and not windows:
+    if "--autostart" in sys.argv:
         fan_tab.start_saved()
         root.after(100, root.iconify)
     refresh()
