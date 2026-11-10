@@ -84,7 +84,7 @@ def main():
             "Earlier RGB protocol research: maihcx and u/idk_a_name_wtf.\n\n"
             "Independent community project; not an official AsiaHorse application.\n"
             "MIT licensed. Original copyright and license notices are preserved.\n\n"
-            "github.com/glassknug/umbra-control-linux",
+            "github.com/glassknug/umbra-control",
             parent=root,
         )
 
