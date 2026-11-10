@@ -35,6 +35,6 @@ class WindowsShortcutTests(unittest.TestCase):
             with patch.object(sys,'platform','win32'),patch.dict(os.environ,SystemRoot='C:/Windows'),patch('windows_shortcut.subprocess.run',return_value=Mock(returncode=0)) as run:
                 windows_shortcut.create(root)
             env=run.call_args.kwargs['env']
-            self.assertEqual(env['UMBRA_SHORTCUT_TARGET'],str(root/'UmbraControl.exe'))
-            self.assertEqual(env['UMBRA_SHORTCUT_ICON'],str(root/'UmbraControl.exe'))
+            self.assertEqual(env['UMBRA_SHORTCUT_TARGET'],str((root/'UmbraControl.exe').resolve()))
+            self.assertEqual(env['UMBRA_SHORTCUT_ICON'],str((root/'UmbraControl.exe').resolve()))
             self.assertEqual(env['UMBRA_SHORTCUT_ARGS'],'')
