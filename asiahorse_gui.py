@@ -41,7 +41,7 @@ def main():
         root.app_icon = tk.PhotoImage(file=str(icon_path))
         root.iconphoto(True, root.app_icon)
     windows = sys.platform == 'win32'
-    root.title("Umbra Control — Windows RGB preview" if windows else "Umbra Control for Linux")
+    root.title("Umbra Control — Windows preview" if windows else "Umbra Control for Linux")
     root.geometry(f"940x{min(940, root.winfo_screenheight() - 90)}")
     root.minsize(860, min(860, root.winfo_screenheight() - 110))
     root.configure(bg="#151923")
@@ -63,7 +63,7 @@ def main():
     def about():
         messagebox.showinfo(
             "About Umbra Control",
-            ("Umbra Control · Windows RGB preview\n\n" if windows else "Umbra Control for Linux · 0.5.0 preview\n\n") +
+            ("Umbra Control · Windows preview\n\n" if windows else "Umbra Control for Linux · 0.5.0 preview\n\n") +
             "Project by glassknug.\n"
             "Desktop GUI, RGB effects, USB fan-control command analysis and hardware testing, "
             "temperature curves, profiles, graphs, shortcuts and menu launcher.\n\n"
@@ -77,7 +77,7 @@ def main():
     ttk.Button(header, text="About", command=about).pack(side="right")
     ttk.Label(frame, text="Lighting and system monitoring").pack(anchor="w", pady=(3, 20))
     if windows:
-        ttk.Label(frame, text="Experimental Windows RGB preview · motor control, sensors and login startup are disabled. Close other RGB controllers before applying.", wraplength=820).pack(anchor='w', pady=(0, 10))
+        ttk.Label(frame, text="Experimental Windows preview · manual fan test: 75% / 100%. Sensors, curves and login startup are disabled. Close other controllers before applying.", wraplength=820).pack(anchor='w', pady=(0, 10))
     notebook = ttk.Notebook(frame)
     notebook.pack(fill="both", expand=True, pady=(0, 6))
     lighting = ttk.Frame(notebook, padding=12)
@@ -213,7 +213,31 @@ def main():
     from fan_ui import FanTab
     fan_tab = None
     if windows:
-        ttk.Label(fans, text='Motor control and temperature curves are not enabled in this Windows RGB preview.', wraplength=760).pack(anchor='w')
+        ttk.Label(fans, text='Manual fan test · all hub fans', font=('Sans',18,'bold')).pack(anchor='w')
+        ttk.Label(fans, text='Requested duty, not measured RPM. Test 100% → 75% → 100%.\nThe decrease to 75% takes about 13 seconds; an increase to 100% is immediate.\nTemperature feedback and automatic fan curves are not available yet.', wraplength=760).pack(anchor='w',pady=12)
+        manual_state = tk.StringVar(value='Inactive · no motor command sent')
+        def manual_request(percent):
+            try:
+                player.fan_manual(percent)
+                manual_state.set(f'Request queued: {percent}% · waiting for USB worker')
+            except ValueError as exc:
+                manual_state.set(str(exc))
+        manual_row = ttk.Frame(fans)
+        manual_row.pack(anchor='w',pady=8)
+        ttk.Button(manual_row,text='Request 100%',command=lambda:manual_request(100)).pack(side='left',padx=(0,8))
+        ttk.Button(manual_row,text='Test 75%',command=lambda:manual_request(75)).pack(side='left')
+        ttk.Label(fans,textvariable=manual_state,wraplength=760).pack(anchor='w',pady=8)
+        ttk.Label(fans,text='Quit requests 100% after manual control. Crash, sleep or USB loss cannot guarantee recovery.\nClosing the window minimizes it; use Quit to exit.',wraplength=760).pack(anchor='w',pady=8)
+        def poll_manual():
+            try:
+                while True:
+                    event = player.fan_events.get_nowait()
+                    duty = event.get('duty')
+                    manual_state.set(f"{event['mode']} · requested duty: {duty}% (not RPM)" if duty is not None else event['mode'])
+            except queue.Empty:
+                pass
+            root.after(200,poll_manual)
+        poll_manual()
         ttk.Label(fans, text='Imported fan profiles can be stored and shared, but cannot be activated here.', wraplength=760).pack(anchor='w', pady=12)
     else:
         fan_tab = FanTab(root, fans, player)

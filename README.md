@@ -8,7 +8,7 @@ An independent community project, not affiliated with or endorsed by AsiaHorse.
 
 ## Experimental Windows 11 RGB preview
 
-Windows support is being tested on the separate `windows-rgb-preview` branch. See [WINDOWS_PREVIEW.md](WINDOWS_PREVIEW.md) for setup and diagnostics. It adds a Windows HID backend while retaining Linux hidraw. Motor control, sensors and login startup are disabled on Windows pending further work. Windows/physical-hub verification is pending; 51 automated tests pass on the Linux development host, including mocked Windows HID tests. The Linux release remains unchanged.
+Windows support is being tested on the separate `windows-rgb-preview` branch. See [WINDOWS_PREVIEW.md](WINDOWS_PREVIEW.md) for setup and diagnostics. It adds a Windows HID backend while retaining Linux hidraw. The owner reports working Windows RGB. Manual fan requests of 75% / 100% are available for hardware testing; automatic curves, sensors and login startup remain disabled. A terminal-free launcher is included. 53 automated tests pass on the Linux development host, including mocked Windows HID and motor tests. The Linux release remains unchanged.
 
 ## Identify port and Export/Import (0.5.0 preview)
 

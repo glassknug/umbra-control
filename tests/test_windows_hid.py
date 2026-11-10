@@ -1,4 +1,5 @@
 import sys
+import queue
 import types
 import unittest
 from unittest.mock import Mock, patch
@@ -47,9 +48,36 @@ class WindowsHIDTests(unittest.TestCase):
         with self.assertRaises(OSError):
             usb.write(types.SimpleNamespace(device=handle), bytes(64))
 
-    def test_motor_entry_points_disabled(self):
+    def test_motor_requests_limited_and_curves_disabled(self):
         player = object.__new__(Player)
+        player.commands = queue.Queue()
         with patch.object(sys, 'platform', 'win32'):
-            for action in (lambda: player.fan_manual(75), lambda: player.fan_curve([(30,50),(80,100)], 'sensor'), lambda: player.fan_full()):
-                with self.assertRaises(ValueError): action()
-            with self.assertRaises(OSError): Player._fan_write(Mock(), 75)
+            player.fan_manual(75); player.fan_full()
+            self.assertEqual(player.commands.get_nowait(),('fan_manual',75.0))
+            self.assertEqual(player.commands.get_nowait(),('fan_manual',100.0))
+            for value in (30,74,80,101,float('nan')):
+                with self.assertRaises(ValueError): player.fan_manual(value)
+            with self.assertRaises(ValueError): player.fan_curve([(30,50),(80,100)],'sensor')
+            with self.assertRaises(OSError): Player._fan_write(Mock(),74)
+
+    def test_motor_claim_packets_and_failed_write(self):
+        with patch.object(sys,'platform','win32'),patch.object(usb,'write',return_value=65) as write:
+            h=object()
+            Player._fan_write(h,75,True)
+            self.assertEqual([call.args[1] for call in write.call_args_list],
+                             [usb.native(bytes(b)) for b in ([251,100],[8,1],[251,75])])
+            write.return_value=64
+            with self.assertRaises(OSError): Player._fan_write(h,100)
+
+    def test_worker_restores_full_duty_on_quit(self):
+        h=Mock()
+        with patch.object(sys,'platform','win32'),patch.object(usb,'open_hub',return_value=h),patch.object(usb,'write',return_value=65) as write:
+            player=Player()
+            try:
+                player.fan_manual(75)
+                self.assertEqual(player.fan_events.get(timeout=2)['duty'],75)
+            finally:
+                player.close();player.thread.join(2)
+            self.assertFalse(player.thread.is_alive())
+            self.assertEqual(write.call_args.args[1],usb.native(bytes([251,100])))
+            h.close.assert_called_once()
