@@ -1,5 +1,7 @@
 # Umbra Control for Linux
 
+**Windows 11 users:** [Download the Windows 0.6.3 preview installer](https://github.com/glassknug/umbra-control-linux/releases/tag/v0.6.3-windows-preview). It includes Python, LibreHardwareMonitor, a sensor setup guide and a **Restart as administrator** button. The installer is unsigned; see the release notes for setup and testing limitations. Windows source is on [`windows-rgb-preview`](https://github.com/glassknug/umbra-control-linux/tree/windows-rgb-preview). Linux instructions continue below.
+
 Native Linux desktop control for **AsiaHorse Umbra** RGB lighting and USB fan curves.
 
 **0.5.0 preview · Developed by [glassknug](https://github.com/glassknug) · MIT license**
