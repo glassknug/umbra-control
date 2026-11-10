@@ -125,18 +125,19 @@ class Player:
 
     def fan_manual(self, percent):
         percent = float(percent)
-        if usb.sys.platform == 'win32' and percent not in (75, 100):
-            raise ValueError('Windows motor preview supports only 75% and 100% requests')
+        if usb.sys.platform == 'win32' and not 75 <= percent <= 100:
+            raise ValueError('Windows motor preview supports 75–100% requests')
         if not 30 <= percent <= 100:
             raise ValueError("Fan duty must be 30–100%")
         self.commands.put(("fan_manual", percent))
 
     def fan_curve(self, points, sensor):
-        if usb.sys.platform == 'win32':
-            raise ValueError('Fan curves are disabled in the Windows RGB preview')
+        points = validate_points(points)
+        if usb.sys.platform == 'win32' and (not isinstance(sensor,str) or not sensor.startswith('lhm:/') or any(p < 75 for _,p in points)):
+            raise ValueError('Windows curves require a LibreHardwareMonitor sensor and 75–100% duty points')
         if not sensor:
             raise ValueError("Select a temperature sensor first")
-        self.commands.put(("fan_curve", (validate_points(points), sensor)))
+        self.commands.put(("fan_curve", (points, sensor)))
 
     def fan_full(self):
         self.fan_manual(100)

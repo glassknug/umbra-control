@@ -44,6 +44,8 @@ def smooth_duty(previous, target, elapsed):
 
 
 def sensor_id(sensor):
+    if sensor.key.startswith('lhm:/'):
+        return sensor.key
     path = Path(sensor.key).resolve()
     # hwmonN numbering can change after reboot; retain the physical device path.
     parent = path.parent
@@ -110,3 +112,4 @@ def save_profiles(profiles, path=None):
     finally:
         if os.path.exists(temp):
             os.unlink(temp)
+

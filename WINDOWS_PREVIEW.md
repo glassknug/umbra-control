@@ -1,49 +1,56 @@
-# Windows 11 RGB preview
+# Windows 11 preview: RGB, sensors and fan curves
 
-Experimental source preview based on the Linux 0.5.0 release. The owner reports working Windows RGB control. Manual motor control is the next hardware test. Keep the official controller closed while testing; use one running copy of Umbra Control.
+Experimental source branch based on Linux 0.5.0. Windows RGB and manual motor requests have been tried by the owner. The new sensor backend, automatic curves, icon/shortcut and setup helper still require native Windows testing. 63 automated tests pass on the Linux development host, including simulated Windows sensor failures. Linux release/main is unchanged.
 
-## Setup (PowerShell in the extracted folder)
+## Install/update
 
-Python 3.12 (64-bit) with Tk is required. Create an isolated environment:
+Quit an older running copy. Extract the complete branch ZIP to a permanent folder (shortcuts point there), then double-click **setup_windows.cmd**. Python 3.12 64-bit must already be installed. Setup creates a local `.venv`, installs binary wheels from `requirements-windows.txt` and creates **Umbra Control** on your actual Desktop (including redirected/OneDrive Desktops). A failed shortcut does not prevent use of `start_windows.cmd`.
+
+Launch with that shortcut or `start_windows.cmd`; PowerShell can then be closed. Quit exits, and the window's close button minimizes. Logs: `%LOCALAPPDATA%\UmbraControl\windows.log`. Close AsiaHorse/SignalRGB and other controllers while testing.
+
+## Sensor library setup
+
+Windows CPU temperatures require a hardware sensor library; Python/Tk alone does not provide them. This preview reads the official **LibreHardwareMonitor** library through Python.NET in a separate child process. No LibreHardwareMonitor binaries are redistributed, no web server is enabled, and our helper only updates hardware and reads sensors. It never calls LHM fan-control APIs.
+
+1. Download **LibreHardwareMonitor.zip** (the .NET Framework build, not the `.NET.10.zip` build) from the official [v0.9.6 release](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases/tag/v0.9.6).
+2. Extract the **whole** ZIP and retain all DLLs, dependencies and license notices together. The folder must contain `LibreHardwareMonitorLib.dll`.
+3. First run the official LibreHardwareMonitor application and confirm that a real CPU temperature is present. Follow its official driver setup if prompted. Some sensors require administrator privileges. Close its application after this check; it need not stay running for our library helper.
+4. In Umbra Control, RGB & sensors, press **Choose sensor library folder…** and select that extracted folder. This loads executable .NET library code from the selected folder; select the official download only.
+5. Wait for sensor values. If CPU values are unavailable, inspect the status message. The library helper inherits the app's privileges: if necessary, Quit and right-click `start_windows.cmd` → Run as administrator for a sensor test. RGB alone does not need elevation. No automatic elevation, driver install or security-setting changes are performed by Umbra.
+6. To retry after fixing setup, use **Restart sensor reader**. The library path is stored locally in `%LOCALAPPDATA%\UmbraControl\sensor-directory.txt` and is not included in shared configurations.
+
+To collect sensor-only diagnostics from PowerShell in the project folder (after choosing the library):
 
 ```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements-windows.txt
-.\.venv\Scripts\python.exe windows_diagnostics.py
+.\.venv\Scripts\python.exe windows_diagnostics.py --sensors
 ```
 
-This first diagnostic enumerates only matching Umbra interfaces (VID 1A86 / PID FE05); it does not send control commands. Share the output if the interface count is not exactly one.
+That mode does not open the Umbra HID device or send motor commands. If testing an elevated app, run the diagnostic from an equivalently elevated terminal to compare sensor access.
 
-Next, query status and LED counts without changing RGB mode or motor settings:
+## Curve test
+
+First verify that the selected CPU reading tracks LibreHardwareMonitor. In **Fan curves**, use **Refresh sensors**, select that specific sensor, and start with `35:75, 60:85, 80:100`. Save the profile if desired, then Apply curve. Starting the app or choosing a library does not activate motor control.
+
+- Windows requests and all curve points are restricted to **75–100%**. Existing imported curves below 75% must be edited before activation. Linux retains 30–100%.
+- Missing, invalid or >=5-second-old samples, or a selected temperature >=85 °C, request 100%. CPU readings of zero are treated as unavailable. Check again within the worker's one-second control cycle.
+- Increases are immediate; decreases are limited to 2 percentage points/second. A 100% to 75% transition takes roughly 13 seconds.
+- Use **Stop sensor reader** while a curve is active: it should show unavailable and request 100%. Observe cooling; a requested duty is not proof of physical RPM.
+- Quit requests 100% after motor control. Crash, sleep or USB loss cannot guarantee recovery. Login startup remains disabled on Windows.
+- Fan control is hub-wide, never individual per port. Imported profiles require local sensor mapping; nothing imported activates automatically.
+
+## RGB diagnostics
 
 ```powershell
+.\.venv\Scripts\python.exe windows_diagnostics.py
 .\.venv\Scripts\python.exe windows_diagnostics.py --probe
 ```
 
-If the probe passes and LED counts match your setup, launch:
+Enumeration does not send commands. The probe queries status/topology without changing RGB mode or motor duty. The owner's initial topology only reported P3; after using the official app it reported P3=110, P4=16, P7=24, P8=24. Automatic device initialization is still under investigation. Use the actual returned LED counts; do not guess from fan count drawings. Keep the standard Windows HID driver; no Zadig/libusb driver replacement is needed.
 
-```powershell
-.\.venv\Scripts\python.exe asiahorse_gui.py
-```
+## Credits and dependencies
 
-Start with a solid color. Check RGB layout, port identification (after applying RGB once), effects and configuration export/import afterwards. Quit exits; the window close button minimizes the app. Running the app as administrator should not be necessary. Do not replace the device's standard Windows HID driver with Zadig/libusb.
+Existing community driver/protocol credits remain in README.md and LICENSE. LibreHardwareMonitor is a separately downloaded, MPL-2.0 sensor dependency; retain its license and third-party notices. Python.NET is an MIT-licensed Python/.NET bridge. No Windows installer or signed standalone executable is included yet; do not use the Linux `install_desktop.py` on Windows.
 
-## Launch without a terminal
-
-After setup, double-click `start_windows.cmd`. It launches the virtual environment’s `pythonw.exe` independently of PowerShell. Closing PowerShell will not close this instance. First Quit an app already started in PowerShell before switching to this launcher. Startup and callback errors are logged to `%LOCALAPPDATA%\UmbraControl\windows.log`.
-
-## Manual fan test
-
-The Fan curves tab currently offers only **Request 100%** and **Test 75%**. With other controllers closed, request 100%, then 75%, then 100%, and observe whether the fans change speed. After 100%, the decrease to 75% takes roughly 13 seconds due to smoothing; returning to 100% is immediate. These are requested duty percentages, not measured RPM. Normal Quit requests 100% after manual control; crashes, sleep and USB loss cannot guarantee recovery. No individual-port motor control is implied.
-
-## Scope
-
-- Reuses RGB effects, layout, fan-group drawings, port identification and configuration sharing.
-- Windows uses `hidapi`; Linux retains direct hidraw I/O without this dependency.
-- Manual motor requests are limited to 75% and 100% (intermediate ramp values stay in 75–100%). Temperature/RPM sensors, automatic curves and login startup remain disabled. RGB alone does not claim motor control.
-- Imported fan profiles can be saved/exported but cannot be activated as curves. Without local sensors their mappings remain empty.
-- Single-instance locking is per local user. It cannot prevent the official app or another controller from opening the same hub.
-- Configuration uses `~/.config/umbra-control` by default, as on Linux (or `XDG_CONFIG_HOME` if set).
-- No Windows installer or signed executable is included yet. Do not use the Linux `install_desktop.py` on Windows.
-
-HIDAPI reference: https://github.com/trezor/cython-hidapi
+- https://github.com/LibreHardwareMonitor/LibreHardwareMonitor
+- https://pythonnet.github.io/pythonnet/python.html
+- https://github.com/trezor/cython-hidapi

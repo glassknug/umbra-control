@@ -35,11 +35,17 @@ def main():
         print("Umbra Control is already running. Restore its minimized window.", file=sys.stderr)
         return 0
 
+    if sys.platform == 'win32':
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('glassknug.UmbraControl.WindowsPreview')
     root = tk.Tk(className="Asiahorse-umbra")
     icon_path = Path(__file__).with_name("umbra-icon.png")
     if icon_path.is_file():
         root.app_icon = tk.PhotoImage(file=str(icon_path))
         root.iconphoto(True, root.app_icon)
+    if sys.platform == 'win32':
+        ico_path = Path(__file__).with_name('umbra-icon.ico')
+        if ico_path.is_file():root.iconbitmap(default=str(ico_path))
     windows = sys.platform == 'win32'
     root.title("Umbra Control — Windows preview" if windows else "Umbra Control for Linux")
     root.geometry(f"940x{min(940, root.winfo_screenheight() - 90)}")
@@ -77,7 +83,7 @@ def main():
     ttk.Button(header, text="About", command=about).pack(side="right")
     ttk.Label(frame, text="Lighting and system monitoring").pack(anchor="w", pady=(3, 20))
     if windows:
-        ttk.Label(frame, text="Experimental Windows preview · manual fan test: 75% / 100%. Sensors, curves and login startup are disabled. Close other controllers before applying.", wraplength=820).pack(anchor='w', pady=(0, 10))
+        ttk.Label(frame, text="Experimental Windows preview · curves: 75–100% with LibreHardwareMonitor. Login startup is disabled. Close other controllers before applying.", wraplength=820).pack(anchor='w', pady=(0, 10))
     notebook = ttk.Notebook(frame)
     notebook.pack(fill="both", expand=True, pady=(0, 6))
     lighting = ttk.Frame(notebook, padding=12)
@@ -146,7 +152,22 @@ def main():
     status = tk.StringVar(value="Choose an effect and press Start / apply. Press again to apply changes.")
     ttk.Label(frame, textvariable=status, wraplength=760).pack(anchor="w", pady=(0, 18))
     ttk.Label(frame, text="Temperatures and fan speeds").pack(anchor="w")
-    ttk.Label(frame, text="Windows sensors are not supported in this preview" if windows else "Linux hwmon · sensor names do not correspond to hub RGB ports", wraplength=760).pack(anchor="w", pady=5)
+    ttk.Label(frame, text="Windows · LibreHardwareMonitor CPU/GPU sensors (read-only)" if windows else "Linux hwmon · sensor names do not correspond to hub RGB ports", wraplength=760).pack(anchor="w", pady=5)
+    if windows:
+        from tkinter import filedialog
+        import windows_sensors
+        sensor_actions = ttk.Frame(frame)
+        sensor_actions.pack(fill='x',pady=5)
+        def choose_sensor_library():
+            folder=filedialog.askdirectory(parent=root,title='Select official LibreHardwareMonitor folder (contains LibreHardwareMonitorLib.dll)')
+            if not folder:return
+            try:
+                windows_sensors.restart(folder)
+            except (OSError,ValueError) as exc:
+                messagebox.showerror('Windows sensor setup',str(exc),parent=root)
+        ttk.Button(sensor_actions,text='Choose sensor library folder…',command=choose_sensor_library).pack(side='left')
+        ttk.Button(sensor_actions,text='Restart sensor reader',command=windows_sensors.restart).pack(side='left',padx=8)
+        ttk.Button(sensor_actions,text='Stop sensor reader',command=windows_sensors.stop).pack(side='left')
     table_frame = ttk.Frame(frame)
     table_frame.pack(fill="both", expand=True)
     table = ttk.Treeview(table_frame, columns=("source", "sensor", "value"), show="headings")
@@ -186,6 +207,9 @@ def main():
                     pass
                 if errors:
                     messagebox.showerror("Check cooling", "\n".join(errors), parent=root)
+                if windows:
+                    import windows_sensors
+                    windows_sensors.stop()
                 root.destroy()
         wait_for_worker()
 
@@ -206,41 +230,15 @@ def main():
                 table.item(sensor.key, values=values)
             else:
                 table.insert("", "end", iid=sensor.key, values=values)
-        sensor_status.set("Refreshes every two seconds · read-only" if sensors else
-                          ("Temperature and RPM readings are unavailable in the Windows preview." if windows else "No hwmon sensors found. Check your system sensor drivers."))
+        if windows:
+            import windows_sensors
+            sensor_status.set(windows_sensors.status())
+        else:
+            sensor_status.set("Refreshes every two seconds · read-only" if sensors else "No hwmon sensors found. Check your system sensor drivers.")
         root.after(2000, update_sensors)
 
     from fan_ui import FanTab
-    fan_tab = None
-    if windows:
-        ttk.Label(fans, text='Manual fan test · all hub fans', font=('Sans',18,'bold')).pack(anchor='w')
-        ttk.Label(fans, text='Requested duty, not measured RPM. Test 100% → 75% → 100%.\nThe decrease to 75% takes about 13 seconds; an increase to 100% is immediate.\nTemperature feedback and automatic fan curves are not available yet.', wraplength=760).pack(anchor='w',pady=12)
-        manual_state = tk.StringVar(value='Inactive · no motor command sent')
-        def manual_request(percent):
-            try:
-                player.fan_manual(percent)
-                manual_state.set(f'Request queued: {percent}% · waiting for USB worker')
-            except ValueError as exc:
-                manual_state.set(str(exc))
-        manual_row = ttk.Frame(fans)
-        manual_row.pack(anchor='w',pady=8)
-        ttk.Button(manual_row,text='Request 100%',command=lambda:manual_request(100)).pack(side='left',padx=(0,8))
-        ttk.Button(manual_row,text='Test 75%',command=lambda:manual_request(75)).pack(side='left')
-        ttk.Label(fans,textvariable=manual_state,wraplength=760).pack(anchor='w',pady=8)
-        ttk.Label(fans,text='Quit requests 100% after manual control. Crash, sleep or USB loss cannot guarantee recovery.\nClosing the window minimizes it; use Quit to exit.',wraplength=760).pack(anchor='w',pady=8)
-        def poll_manual():
-            try:
-                while True:
-                    event = player.fan_events.get_nowait()
-                    duty = event.get('duty')
-                    manual_state.set(f"{event['mode']} · requested duty: {duty}% (not RPM)" if duty is not None else event['mode'])
-            except queue.Empty:
-                pass
-            root.after(200,poll_manual)
-        poll_manual()
-        ttk.Label(fans, text='Imported fan profiles can be stored and shared, but cannot be activated here.', wraplength=760).pack(anchor='w', pady=12)
-    else:
-        fan_tab = FanTab(root, fans, player)
+    fan_tab = FanTab(root, fans, player)
     from rgb_layout_ui import RGBLayoutTab
     control_tab = RGBLayoutTab(root, control_container, player, status)
     transfer_container = ttk.Frame(notebook)

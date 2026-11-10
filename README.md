@@ -8,7 +8,7 @@ An independent community project, not affiliated with or endorsed by AsiaHorse.
 
 ## Experimental Windows 11 RGB preview
 
-Windows support is being tested on the separate `windows-rgb-preview` branch. See [WINDOWS_PREVIEW.md](WINDOWS_PREVIEW.md) for setup and diagnostics. It adds a Windows HID backend while retaining Linux hidraw. The owner reports working Windows RGB. Manual fan requests of 75% / 100% are available for hardware testing; automatic curves, sensors and login startup remain disabled. A terminal-free launcher is included. 53 automated tests pass on the Linux development host, including mocked Windows HID and motor tests. The Linux release remains unchanged.
+Windows support is being tested on the separate `windows-rgb-preview` branch. See [WINDOWS_PREVIEW.md](WINDOWS_PREVIEW.md) for setup, sensor dependencies and diagnostics. The owner reports working Windows RGB and manual control. This revision adds a Windows icon/Desktop shortcut and an isolated LibreHardwareMonitor sensor backend, with experimental temperature curves limited to 75–100%. Missing/stale sensors request full duty; login startup remains disabled. **63 automated tests pass** on the Linux host; the new native Windows sensor/curve flow still needs verification. The Linux release remains unchanged.
 
 ## Identify port and Export/Import (0.5.0 preview)
 

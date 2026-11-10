@@ -1,6 +1,7 @@
 """Fan curves tab: editable curves, profile shortcuts and live history."""
 from collections import deque
 import queue
+import sys
 import tkinter as tk
 from tkinter import messagebox, ttk
 
@@ -11,6 +12,7 @@ import startup
 
 class FanTab:
     def __init__(self, root, frame, player):
+        self.windows = sys.platform == "win32"
         self.root, self.player = root, player
         self.history = deque(maxlen=120)
         self.sensor_map = {}
@@ -73,12 +75,13 @@ class FanTab:
         ttk.Button(row, text='Preview', command=self.preview).pack(side='left', padx=5)
         ttk.Button(row, text='Apply curve', command=self.apply).pack(side='left')
         ttk.Checkbutton(frame, text='Start minimized and apply this curve at login',
+                        state='disabled' if self.windows else 'normal',
                         variable=self.start_at_login, command=self.set_startup).pack(anchor='w', pady=5)
-        ttk.Label(frame, text='Uses a saved curve snapshot. Reapply to update it; uncheck to disable.').pack(anchor='w')
+        ttk.Label(frame, text='Login startup is disabled in the Windows preview.' if self.windows else 'Uses a saved curve snapshot. Reapply to update it; uncheck to disable.').pack(anchor='w')
         row = ttk.Frame(frame)
         row.pack(fill='x', pady=8)
         ttk.Label(row, text='Manual %').pack(side='left')
-        ttk.Spinbox(row, from_=30, to=100, increment=1, textvariable=self.manual, width=6).pack(side='left', padx=5)
+        ttk.Spinbox(row, from_=75 if self.windows else 30, to=100, increment=1, textvariable=self.manual, width=6).pack(side='left', padx=5)
         ttk.Button(row, text='Apply manual', command=self.apply_manual).pack(side='left')
         ttk.Button(row, text='Stop curve / 100%', command=self.full).pack(side='left', padx=5)
         ttk.Label(frame, textvariable=self.state, wraplength=780).pack(anchor='w')
@@ -87,7 +90,7 @@ class FanTab:
         self.live = tk.Canvas(frame, height=135, bg='#202737', highlightthickness=0)
         self.live.pack(fill='both', expand=True, pady=4)
         self.live.bind('<Configure>', lambda _: self.draw_history())
-        ttk.Label(frame, text='Sensor error or ≥85 °C → request 100%. Increases are immediate; decreases are limited to 2%/s.\nNormal exit requests 100%; crash, sleep or USB loss cannot guarantee cooling recovery.\n30–100% allowed; only 75% and 100% have been hardware-tested. Shortcuts work while this app has focus.', wraplength=780).pack(anchor='w')
+        ttk.Label(frame, text='Sensor error or ≥85 °C → request 100%. Increases are immediate; decreases are limited to 2%/s.\nNormal exit requests 100%; crash, sleep or USB loss cannot guarantee cooling recovery.\n75–100% on Windows; 30–100% on Linux. Only 75% and 100% have been hardware-tested. Shortcuts work while this app has focus.', wraplength=780).pack(anchor='w')
         self.refresh_sensors()
         try:
             self.profiles = load_profiles()
@@ -95,7 +98,7 @@ class FanTab:
             messagebox.showerror('Profiles', f'Could not load profiles: {exc}', parent=root)
         self.update_choices()
         try:
-            self.start_at_login.set(startup.load() is not None)
+            self.start_at_login.set(not self.windows and startup.load() is not None)
         except (OSError, ValueError):
             pass
         for key in range(1, 10):
@@ -188,7 +191,7 @@ class FanTab:
         self.sensor_map = {}
         for s in read_sensors():
             if s.kind == 'temperature':
-                label = f'{s.source} · {s.label} · {s.key.split("/")[-2]}'
+                label = f'{s.source} · {s.label} · {s.key if self.windows else s.key.split("/")[-2]}'
                 self.sensor_map[label] = sensor_id(s)
         self.sensor_box.configure(values=list(self.sensor_map))
         chosen = next((label for label, identity in self.sensor_map.items() if identity == current), None)
@@ -331,3 +334,4 @@ class FanTab:
         if changed:
             self.draw_history()
         self.root.after(200, self.poll)
+

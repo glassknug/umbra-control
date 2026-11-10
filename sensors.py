@@ -1,6 +1,7 @@
 """Read-only Linux hwmon telemetry. No assumptions about hub port mapping."""
 from dataclasses import dataclass
 from pathlib import Path
+import sys
 
 
 @dataclass(frozen=True)
@@ -19,7 +20,11 @@ def _read(path: Path, fallback: str = "") -> str:
         return fallback
 
 
-def read_sensors(root: Path = Path("/sys/class/hwmon")) -> list[Sensor]:
+def read_sensors(root: Path | None = None) -> list[Sensor]:
+    if root is None and sys.platform == 'win32':
+        from windows_sensors import read_sensors as windows_read
+        return windows_read()
+    root = root or Path('/sys/class/hwmon')
     sensors = []
     for device in sorted(root.glob("hwmon*")):
         source = _read(device / "name", device.name)
@@ -45,4 +50,8 @@ def cpu_temperature(sensors):
                    s.source == source and s.label == label]
         if len(matches) == 1:
             return matches[0]
+    for label in ('Core (Tctl/Tdie)','Core (Tctl)','CPU Package','Core (Tdie)'):
+        matches=[s for s in sensors if s.kind=='temperature' and s.key.startswith(('lhm:/amdcpu/','lhm:/intelcpu/')) and s.label==label]
+        if len(matches)==1:return matches[0]
     return None
+

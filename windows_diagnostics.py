@@ -6,10 +6,27 @@ import sys
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--probe', action='store_true', help='Open the hub and query status and LED counts; no mode or motor changes')
+    parser.add_argument('--sensors', action='store_true', help='Read configured CPU/GPU sensors only; no HID commands')
     args = parser.parse_args()
     if sys.platform != 'win32':
         print('This diagnostic is for Windows.'); return 1
     try:
+        if args.sensors:
+            import time
+            import windows_sensors
+            from sensors import cpu_temperature
+            try:
+                for _ in range(150):
+                    sensors=windows_sensors.read_sensors()
+                    if sensors or 'Waiting' not in windows_sensors.status():break
+                    time.sleep(.1)
+                print(windows_sensors.status())
+                for sensor in sensors:
+                    print(f'{sensor.key} | {sensor.label} | {sensor.kind} | {sensor.value}')
+                cpu=cpu_temperature(sensors)
+                print('CPU temperature:',cpu.value if cpu else 'unavailable')
+                return 0 if cpu and cpu.value is not None else 1
+            finally:windows_sensors.stop()
         import hid
         import asiahorse as usb
         devices = hid.enumerate(usb.VID, usb.PID)

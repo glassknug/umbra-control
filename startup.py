@@ -20,6 +20,8 @@ def load():
 
 
 def configure(profile):
+    if sys.platform == 'win32':
+        raise ValueError('Login startup is not supported in this Windows preview')
     config, entry = paths()
     if profile is None:
         entry.unlink(missing_ok=True)
@@ -33,3 +35,4 @@ def configure(profile):
     command = f'{desktop_quote(sys.executable)} {desktop_quote(str(script))} --autostart'
     entry.write_text('[Desktop Entry]\nType=Application\nName=Umbra Control\n'
                      f'Exec={command}\nTerminal=false\nIcon=asiahorse-umbra\n', encoding='utf-8')
+
