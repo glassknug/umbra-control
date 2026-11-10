@@ -1,0 +1,24 @@
+Umbra Control for Windows — 0.6.2 preview
+
+Recommended: run UmbraControl-Windows-0.6.2-Setup.exe.
+Setup installs for the current user, creates a Start menu shortcut, and optionally
+adds a desktop shortcut. Python is included. Do not run from inside an archive.
+Quit the old app before installing. Keep the install directory in place.
+
+LibreHardwareMonitor 0.9.6 (unmodified) is included with its license and source
+link in LibreHardwareMonitor/SOURCE.txt. No manual DLL folder download is needed.
+Open Sensor setup in Umbra Control. Open the included LibreHardwareMonitor tool
+and review its PawnIO driver installation prompt if required. Drivers are never
+installed silently. Close Umbra Control and use Run as administrator for CPU
+sensor access and enabling/disabling login startup. RGB works without this step.
+
+Choose the CPU sensor under Fan curves before applying. Windows duty is 50–100%.
+Missing/stale sensor data requests 100%. Motor speed is shared across the hub.
+Login startup is opt-in and uses a saved curve. Disable login startup in the app
+before uninstalling or moving it. Uninstallation preserves configuration files.
+
+The installer writes its bundled files directly; it does not change Windows trust
+settings or run Unblock-File. The portable ZIP remains an advanced option and may
+need manual downloaded-file unblocking. This preview is unsigned; Windows may
+show SmartScreen warnings. See WINDOWS_SIGNING.md. Hardware and first-login
+behavior need real Windows 11 testing. Close other hub controllers before use.

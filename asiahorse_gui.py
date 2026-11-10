@@ -16,26 +16,45 @@ def main():
         print(f"Tk is unavailable: {exc}\nInstall Python Tk: python3-tkinter on Bazzite/Fedora; python3-tk on Debian/Ubuntu.", file=sys.stderr)
         return 1
 
-    import fcntl
     import os
     lock_dir = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "umbra-control"
     lock_dir.mkdir(parents=True, exist_ok=True)
-    session_lock = (lock_dir / "session.lock").open("a")
+    session_lock = (lock_dir / "session.lock").open("a+b")
     try:
-        fcntl.flock(session_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except BlockingIOError:
+        if sys.platform == 'win32':
+            import msvcrt
+            session_lock.seek(0, 2)
+            if session_lock.tell() == 0:
+                session_lock.write(b'0'); session_lock.flush()
+            session_lock.seek(0)
+            msvcrt.locking(session_lock.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(session_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
         print("Umbra Control is already running. Restore its minimized window.", file=sys.stderr)
         return 0
 
+    if sys.platform == 'win32':
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('glassknug.UmbraControl.WindowsPreview')
     root = tk.Tk(className="Asiahorse-umbra")
     icon_path = Path(__file__).with_name("umbra-icon.png")
     if icon_path.is_file():
         root.app_icon = tk.PhotoImage(file=str(icon_path))
         root.iconphoto(True, root.app_icon)
-    root.title("Umbra Control for Linux")
+    if sys.platform == 'win32':
+        ico_path = Path(__file__).with_name('umbra-icon.ico')
+        if ico_path.is_file():root.iconbitmap(default=str(ico_path))
+    windows = sys.platform == 'win32'
+    root.title("Umbra Control — Windows preview" if windows else "Umbra Control for Linux")
     root.geometry(f"940x{min(940, root.winfo_screenheight() - 90)}")
     root.minsize(860, min(860, root.winfo_screenheight() - 110))
     root.configure(bg="#151923")
+    if windows:
+        from windows_icon import set_native_icons
+        # Tk/Explorer can replace startup defaults while mapping the outer window.
+        root.after(300,lambda:set_native_icons(root,Path(__file__).with_name('umbra-icon.ico')))
     style = ttk.Style(root)
     style.theme_use("clam")
     style.configure("TFrame", background="#151923")
@@ -53,15 +72,19 @@ def main():
 
     def about():
         messagebox.showinfo(
-            "About Umbra Control for Linux",
-            "Umbra Control for Linux · 0.5.0 preview\n\n"
-            "Project by glassknug.\n"
-            "Desktop GUI, RGB effects, USB fan-control command analysis and hardware testing, "
-            "temperature curves, profiles, graphs, shortcuts and menu launcher.\n\n"
+            "About Umbra Control",
+            ("Umbra Control · Windows 0.6.2 preview\n\n" if windows else "Umbra Control for Linux · 0.5.0 preview\n\n") +
+            "Created by glassknug.\n\n"
+            "RGB effects and a visual PC layout with fan groups, LED strips and ARGB cables.\n"
+            "Horizontal/vertical fan groups, port identification and configuration export/import.\n"
+            "Hub-wide temperature-based fan curves, profiles and live sensor graphs.\n" +
+            ("Windows: 50–100% fan duty, LibreHardwareMonitor sensors and optional minimized startup at login.\n\n" if windows else "Linux: live hwmon sensors and optional startup with a saved fan curve.\n\n") +
+            "Fans sharing the hub use the same requested motor speed; RGB effects are assigned per port.\n\n"
             "Original Linux HID driver: ToeTagger / LuxDev372.\n"
             "Earlier RGB protocol research: maihcx and u/idk_a_name_wtf.\n\n"
             "Independent community project; not an official AsiaHorse application.\n"
-            "MIT licensed. Original copyright and license notices are preserved.",
+            "MIT licensed. Original copyright and license notices are preserved.\n\n"
+            "github.com/glassknug/umbra-control-linux",
             parent=root,
         )
 
@@ -135,7 +158,26 @@ def main():
     status = tk.StringVar(value="Choose an effect and press Start / apply. Press again to apply changes.")
     ttk.Label(frame, textvariable=status, wraplength=760).pack(anchor="w", pady=(0, 18))
     ttk.Label(frame, text="Temperatures and fan speeds").pack(anchor="w")
-    ttk.Label(frame, text="Linux hwmon · sensor names do not correspond to hub RGB ports", wraplength=760).pack(anchor="w", pady=5)
+    ttk.Label(frame, text="Windows · LibreHardwareMonitor CPU/GPU sensors (read-only)" if windows else "Linux hwmon · sensor names do not correspond to hub RGB ports", wraplength=760).pack(anchor="w", pady=5)
+    if windows:
+        from tkinter import filedialog
+        import windows_sensors
+        sensor_actions = ttk.Frame(frame)
+        sensor_actions.pack(fill='x',pady=5)
+        def choose_sensor_library():
+            folder=filedialog.askdirectory(parent=root,title='Select official LibreHardwareMonitor folder (contains LibreHardwareMonitorLib.dll)')
+            if not folder:return
+            try:
+                windows_sensors.restart(folder)
+            except (OSError,ValueError) as exc:
+                messagebox.showerror('Windows sensor setup',str(exc),parent=root)
+        from windows_setup import show as show_sensor_setup
+        ttk.Button(sensor_actions,text='Sensor setup…',command=lambda:show_sensor_setup(root)).pack(side='left')
+        ttk.Button(sensor_actions,text='Restart sensor reader',command=windows_sensors.restart).pack(side='left',padx=8)
+        ttk.Button(sensor_actions,text='Stop sensor reader',command=windows_sensors.stop).pack(side='left')
+    # Pack status before the expanding table so Windows/DPI scaling cannot hide errors.
+    sensor_status = tk.StringVar(value='Waiting for sensor reader…')
+    ttk.Label(frame, textvariable=sensor_status, wraplength=760).pack(anchor='w',pady=(5,8))
     table_frame = ttk.Frame(frame)
     table_frame.pack(fill="both", expand=True)
     table = ttk.Treeview(table_frame, columns=("source", "sensor", "value"), show="headings")
@@ -146,8 +188,6 @@ def main():
     table.configure(yscrollcommand=scrollbar.set)
     scrollbar.pack(side="right", fill="y")
     table.pack(fill="both", expand=True)
-    sensor_status = tk.StringVar()
-    ttk.Label(frame, textvariable=sensor_status, wraplength=760).pack(anchor="w", pady=(8, 0))
 
     def refresh():
         try:
@@ -175,6 +215,9 @@ def main():
                     pass
                 if errors:
                     messagebox.showerror("Check cooling", "\n".join(errors), parent=root)
+                if windows:
+                    import windows_sensors
+                    windows_sensors.stop()
                 root.destroy()
         wait_for_worker()
 
@@ -195,8 +238,11 @@ def main():
                 table.item(sensor.key, values=values)
             else:
                 table.insert("", "end", iid=sensor.key, values=values)
-        sensor_status.set("Refreshes every two seconds · read-only" if sensors else
-                          "No hwmon sensors found. Check your system sensor drivers.")
+        if windows:
+            import windows_sensors
+            sensor_status.set(windows_sensors.status())
+        else:
+            sensor_status.set("Refreshes every two seconds · read-only" if sensors else "No hwmon sensors found. Check your system sensor drivers.")
         root.after(2000, update_sensors)
 
     from fan_ui import FanTab

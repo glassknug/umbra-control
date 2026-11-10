@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 from config_transfer import export_bundle, import_bundle, read_bundle, suggested_sensors, write_bundle
-from fan_curves import sensor_id
+from fan_curves import sensor_id, load_profiles
 from sensors import read_sensors
 
 
@@ -31,7 +31,8 @@ class TransferTab:
         try:
             if not self.rgb_tab.update_selected():return
             layout=dict(version=1,devices=self.rgb_tab.devices)
-            bundle=export_bundle(layout,self.fan_tab.profiles,read_sensors())
+            profiles=self.fan_tab.profiles if self.fan_tab is not None else load_profiles()
+            bundle=export_bundle(layout,profiles,read_sensors())
             filename=filedialog.asksaveasfilename(parent=self.root,title='Export Umbra configuration',defaultextension='.json',filetypes=[('Umbra configuration','*.json')],initialfile='umbra-configuration.json')
             if not filename:return
             write_bundle(filename,bundle)
@@ -75,11 +76,12 @@ class TransferTab:
             self.rgb_tab.dirty=False;self.rgb_tab.refresh_choices()
             self.rgb_tab.select(0 if self.rgb_tab.devices else None)
             self.rgb_tab.status.set('Imported layout · press Apply layout RGB when ready')
-            self.fan_tab.profiles=profiles;self.fan_tab.update_choices()
-            self.fan_tab.profile_choice.set(profiles[0]['name'] if profiles else '')
-            self.fan_tab.refresh_sensors()
-            if profiles:self.fan_tab.load_selected()
-            else:self.fan_tab.new()
+            if self.fan_tab is not None:
+                self.fan_tab.profiles=profiles;self.fan_tab.update_choices()
+                self.fan_tab.profile_choice.set(profiles[0]['name'] if profiles else '')
+                self.fan_tab.refresh_sensors()
+                if profiles:self.fan_tab.load_selected()
+                else:self.fan_tab.new()
             self.status.set(f'Imported. Nothing activated. Backup saved in {backup}')
             self.import_button.configure(state='disabled');self.bundle=None
         except (OSError,ValueError,KeyError) as exc:messagebox.showerror('Import configuration',str(exc),parent=self.root)

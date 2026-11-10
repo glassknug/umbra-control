@@ -13,6 +13,9 @@ def paths():
 
 
 def load():
+    if sys.platform == 'win32':
+        from windows_startup import load as windows_load
+        return windows_load()
     config, entry = paths()
     if not entry.exists() or not config.exists():
         return None
@@ -20,6 +23,9 @@ def load():
 
 
 def configure(profile):
+    if sys.platform == 'win32':
+        from windows_startup import configure as windows_configure
+        return windows_configure(profile)
     config, entry = paths()
     if profile is None:
         entry.unlink(missing_ok=True)
@@ -33,3 +39,4 @@ def configure(profile):
     command = f'{desktop_quote(sys.executable)} {desktop_quote(str(script))} --autostart'
     entry.write_text('[Desktop Entry]\nType=Application\nName=Umbra Control\n'
                      f'Exec={command}\nTerminal=false\nIcon=asiahorse-umbra\n', encoding='utf-8')
+

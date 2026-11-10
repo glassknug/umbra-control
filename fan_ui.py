@@ -1,6 +1,7 @@
 """Fan curves tab: editable curves, profile shortcuts and live history."""
 from collections import deque
 import queue
+import sys
 import tkinter as tk
 from tkinter import messagebox, ttk
 
@@ -11,6 +12,7 @@ import startup
 
 class FanTab:
     def __init__(self, root, frame, player):
+        self.windows = sys.platform == "win32"
         self.root, self.player = root, player
         self.history = deque(maxlen=120)
         self.sensor_map = {}
@@ -18,7 +20,7 @@ class FanTab:
         self.name = tk.StringVar(value='Balanced')
         self.sensor = tk.StringVar()
         self.shortcut = tk.StringVar(value='1')
-        self.points = tk.StringVar(value='35:75, 60:85, 80:100')
+        self.points = tk.StringVar(value='35:50, 60:75, 80:100' if self.windows else '35:75, 60:85, 80:100')
         self.manual = tk.DoubleVar(value=100)
         self.start_at_login = tk.BooleanVar(value=False)
         self.state = tk.StringVar(value='Inactive · opening this tab does not change fan speed')
@@ -30,6 +32,7 @@ class FanTab:
         self.temp = None
         self.duty = None
         self.active_sensor = None
+        self.pending_startup_sensor = None
         ttk.Label(frame, text='Fan curves · all hub fans', font=('Sans', 18, 'bold')).pack(anchor='w')
         ttk.Label(frame, text='Duty is a requested percentage, not measured RPM. Curves continue while the app is minimized.', wraplength=780).pack(anchor='w', pady=5)
         row = ttk.Frame(frame)
@@ -74,11 +77,11 @@ class FanTab:
         ttk.Button(row, text='Apply curve', command=self.apply).pack(side='left')
         ttk.Checkbutton(frame, text='Start minimized and apply this curve at login',
                         variable=self.start_at_login, command=self.set_startup).pack(anchor='w', pady=5)
-        ttk.Label(frame, text='Uses a saved curve snapshot. Reapply to update it; uncheck to disable.').pack(anchor='w')
+        ttk.Label(frame, text='Windows startup runs with administrator privileges for CPU sensor access, 30 seconds after login. Run as administrator to enable or disable it.' if self.windows else 'Uses a saved curve snapshot. Reapply to update it; uncheck to disable.', wraplength=780).pack(anchor='w')
         row = ttk.Frame(frame)
         row.pack(fill='x', pady=8)
         ttk.Label(row, text='Manual %').pack(side='left')
-        ttk.Spinbox(row, from_=30, to=100, increment=1, textvariable=self.manual, width=6).pack(side='left', padx=5)
+        ttk.Spinbox(row, from_=50 if self.windows else 30, to=100, increment=1, textvariable=self.manual, width=6).pack(side='left', padx=5)
         ttk.Button(row, text='Apply manual', command=self.apply_manual).pack(side='left')
         ttk.Button(row, text='Stop curve / 100%', command=self.full).pack(side='left', padx=5)
         ttk.Label(frame, textvariable=self.state, wraplength=780).pack(anchor='w')
@@ -87,7 +90,7 @@ class FanTab:
         self.live = tk.Canvas(frame, height=135, bg='#202737', highlightthickness=0)
         self.live.pack(fill='both', expand=True, pady=4)
         self.live.bind('<Configure>', lambda _: self.draw_history())
-        ttk.Label(frame, text='Sensor error or ≥85 °C → request 100%. Increases are immediate; decreases are limited to 2%/s.\nNormal exit requests 100%; crash, sleep or USB loss cannot guarantee cooling recovery.\n30–100% allowed; only 75% and 100% have been hardware-tested. Shortcuts work while this app has focus.', wraplength=780).pack(anchor='w')
+        ttk.Label(frame, text='Sensor error or ≥85 °C → request 100%. Increases are immediate; decreases are limited to 2%/s.\nNormal exit requests 100%; crash, sleep or USB loss cannot guarantee cooling recovery.\n50–100% on Windows; 30–100% on Linux. Only 75% and 100% have been hardware-tested. Shortcuts work while this app has focus.', wraplength=780).pack(anchor='w')
         self.refresh_sensors()
         try:
             self.profiles = load_profiles()
@@ -104,6 +107,12 @@ class FanTab:
         self.refresh_cpu()
 
     def refresh_cpu(self):
+        if self.pending_startup_sensor:
+            self.refresh_sensors()
+            selected=next((label for label,identity in self.sensor_map.items() if identity==self.pending_startup_sensor),None)
+            if selected:
+                self.sensor.set(selected)
+                self.pending_startup_sensor=None
         import math
         sensor = cpu_temperature(read_sensors())
         value = sensor.value if sensor else None
@@ -162,7 +171,7 @@ class FanTab:
         self.profile_choice.set('')
         self.name.set('New profile')
         self.shortcut.set('')
-        self.points.set('35:75, 60:85, 80:100')
+        self.points.set('35:50, 60:75, 80:100' if self.windows else '35:75, 60:85, 80:100')
         self.draw_curve()
 
     def load_selected(self):
@@ -188,7 +197,7 @@ class FanTab:
         self.sensor_map = {}
         for s in read_sensors():
             if s.kind == 'temperature':
-                label = f'{s.source} · {s.label} · {s.key.split("/")[-2]}'
+                label = f'{s.source} · {s.label} · {s.key if self.windows else s.key.split("/")[-2]}'
                 self.sensor_map[label] = sensor_id(s)
         self.sensor_box.configure(values=list(self.sensor_map))
         chosen = next((label for label, identity in self.sensor_map.items() if identity == current), None)
@@ -202,9 +211,10 @@ class FanTab:
     def set_startup(self):
         try:
             startup.configure(self.snapshot() if self.start_at_login.get() else None)
-            self.state.set('Startup curve saved' if self.start_at_login.get() else 'Startup disabled')
+            self.state.set('Startup curve saved · starts minimized 30 seconds after Windows login' if self.windows and self.start_at_login.get() else 'Startup curve saved' if self.start_at_login.get() else 'Startup disabled')
         except (OSError, ValueError) as exc:
-            self.start_at_login.set(False)
+            try:self.start_at_login.set(startup.load() is not None)
+            except (OSError,ValueError):self.start_at_login.set(False)
             messagebox.showerror('Startup', str(exc), parent=self.root)
 
     def start_saved(self):
@@ -213,6 +223,11 @@ class FanTab:
             if p:
                 self.player.fan_curve(p['points'], p['sensor'])
                 self.active_sensor = p['sensor']
+                self.pending_startup_sensor = p['sensor']
+                self.name.set(p['name'])
+                self.shortcut.set(p['shortcut'])
+                self.points.set(', '.join(f'{t:g}:{v:g}' for t,v in p['points']))
+                self.draw_curve()
                 self.state.set(f'Startup curve: {p["name"]}')
         except (OSError, ValueError) as exc:
             self.player.fan_full()
@@ -331,3 +346,4 @@ class FanTab:
         if changed:
             self.draw_history()
         self.root.after(200, self.poll)
+
