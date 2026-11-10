@@ -16,14 +16,22 @@ def main():
         print(f"Tk is unavailable: {exc}\nInstall Python Tk: python3-tkinter on Bazzite/Fedora; python3-tk on Debian/Ubuntu.", file=sys.stderr)
         return 1
 
-    import fcntl
     import os
     lock_dir = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "umbra-control"
     lock_dir.mkdir(parents=True, exist_ok=True)
-    session_lock = (lock_dir / "session.lock").open("a")
+    session_lock = (lock_dir / "session.lock").open("a+b")
     try:
-        fcntl.flock(session_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except BlockingIOError:
+        if sys.platform == 'win32':
+            import msvcrt
+            session_lock.seek(0, 2)
+            if session_lock.tell() == 0:
+                session_lock.write(b'0'); session_lock.flush()
+            session_lock.seek(0)
+            msvcrt.locking(session_lock.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(session_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
         print("Umbra Control is already running. Restore its minimized window.", file=sys.stderr)
         return 0
 
@@ -32,7 +40,8 @@ def main():
     if icon_path.is_file():
         root.app_icon = tk.PhotoImage(file=str(icon_path))
         root.iconphoto(True, root.app_icon)
-    root.title("Umbra Control for Linux")
+    windows = sys.platform == 'win32'
+    root.title("Umbra Control — Windows RGB preview" if windows else "Umbra Control for Linux")
     root.geometry(f"940x{min(940, root.winfo_screenheight() - 90)}")
     root.minsize(860, min(860, root.winfo_screenheight() - 110))
     root.configure(bg="#151923")
@@ -53,8 +62,8 @@ def main():
 
     def about():
         messagebox.showinfo(
-            "About Umbra Control for Linux",
-            "Umbra Control for Linux · 0.5.0 preview\n\n"
+            "About Umbra Control",
+            ("Umbra Control · Windows RGB preview\n\n" if windows else "Umbra Control for Linux · 0.5.0 preview\n\n") +
             "Project by glassknug.\n"
             "Desktop GUI, RGB effects, USB fan-control command analysis and hardware testing, "
             "temperature curves, profiles, graphs, shortcuts and menu launcher.\n\n"
@@ -67,6 +76,8 @@ def main():
 
     ttk.Button(header, text="About", command=about).pack(side="right")
     ttk.Label(frame, text="Lighting and system monitoring").pack(anchor="w", pady=(3, 20))
+    if windows:
+        ttk.Label(frame, text="Experimental Windows RGB preview · motor control, sensors and login startup are disabled. Close other RGB controllers before applying.", wraplength=820).pack(anchor='w', pady=(0, 10))
     notebook = ttk.Notebook(frame)
     notebook.pack(fill="both", expand=True, pady=(0, 6))
     lighting = ttk.Frame(notebook, padding=12)
@@ -135,7 +146,7 @@ def main():
     status = tk.StringVar(value="Choose an effect and press Start / apply. Press again to apply changes.")
     ttk.Label(frame, textvariable=status, wraplength=760).pack(anchor="w", pady=(0, 18))
     ttk.Label(frame, text="Temperatures and fan speeds").pack(anchor="w")
-    ttk.Label(frame, text="Linux hwmon · sensor names do not correspond to hub RGB ports", wraplength=760).pack(anchor="w", pady=5)
+    ttk.Label(frame, text="Windows sensors are not supported in this preview" if windows else "Linux hwmon · sensor names do not correspond to hub RGB ports", wraplength=760).pack(anchor="w", pady=5)
     table_frame = ttk.Frame(frame)
     table_frame.pack(fill="both", expand=True)
     table = ttk.Treeview(table_frame, columns=("source", "sensor", "value"), show="headings")
@@ -196,11 +207,16 @@ def main():
             else:
                 table.insert("", "end", iid=sensor.key, values=values)
         sensor_status.set("Refreshes every two seconds · read-only" if sensors else
-                          "No hwmon sensors found. Check your system sensor drivers.")
+                          ("Temperature and RPM readings are unavailable in the Windows preview." if windows else "No hwmon sensors found. Check your system sensor drivers."))
         root.after(2000, update_sensors)
 
     from fan_ui import FanTab
-    fan_tab = FanTab(root, fans, player)
+    fan_tab = None
+    if windows:
+        ttk.Label(fans, text='Motor control and temperature curves are not enabled in this Windows RGB preview.', wraplength=760).pack(anchor='w')
+        ttk.Label(fans, text='Imported fan profiles can be stored and shared, but cannot be activated here.', wraplength=760).pack(anchor='w', pady=12)
+    else:
+        fan_tab = FanTab(root, fans, player)
     from rgb_layout_ui import RGBLayoutTab
     control_tab = RGBLayoutTab(root, control_container, player, status)
     transfer_container = ttk.Frame(notebook)
@@ -216,7 +232,7 @@ def main():
     notebook.add(transfer_container, text="Export/Import")
     from transfer_ui import TransferTab
     transfer_tab = TransferTab(root, transfer_frame, control_tab, fan_tab)
-    if "--autostart" in sys.argv:
+    if "--autostart" in sys.argv and not windows:
         fan_tab.start_saved()
         root.after(100, root.iconify)
     refresh()

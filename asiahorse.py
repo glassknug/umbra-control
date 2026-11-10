@@ -1,10 +1,10 @@
 """
-asiahorse.py - AsiaHorse Umbra ARGB hub control for Linux.
+asiahorse.py - AsiaHorse Umbra ARGB hub control.
 
 Native Linux control (per-LED capable, 10 ports) for the AsiaHorse Umbra
 ARGB hub - USB VID 0x1A86 PID 0xFE05, enumerates as "USBFAN" (QinHeng
-CH55x). No official Linux support exists; this speaks the hub's own HID
-protocol directly via /dev/hidraw. Python 3 stdlib only, no dependencies.
+CH55x). This speaks the hub's HID protocol directly via /dev/hidraw on
+Linux (stdlib only), or via hidapi in the experimental Windows backend.
 
 See README.md for full protocol documentation and the required udev rule.
 
@@ -73,6 +73,27 @@ def rgb_packet(count: int, index: int, colors: list) -> bytes:
 # no backend moods. First write byte is the report ID (0x00).
 class Hub:
     def __init__(self):
+        self.device = None
+        self.fd = None
+        if sys.platform == "win32":
+            try:
+                import hid
+            except ImportError as exc:
+                raise OSError("Windows requires hidapi: py -3.12 -m pip install -r requirements-windows.txt") from exc
+            devices = hid.enumerate(VID, PID)
+            if not devices:
+                raise OSError("No Umbra HID device found (1A86:FE05). Check power and USB connection.")
+            if len(devices) != 1:
+                raise OSError("Multiple Umbra HID interfaces found. Run windows_diagnostics.py before continuing.")
+            self.node = devices[0]['path']
+            self.device = hid.device()
+            try:
+                self.device.open_path(self.node)
+            except Exception as exc:
+                self.device.close()
+                self.device = None
+                raise OSError("Could not open Umbra. Close AsiaHorse, SignalRGB and other controllers first.") from exc
+            return
         self.node = self._find_node()
         self.fd = os.open(self.node, os.O_RDWR)
 
@@ -89,6 +110,9 @@ class Hub:
         raise SystemExit(f"no hidraw node for {want} - hub unplugged, or udev rule missing?")
 
     def close(self):
+        if self.device is not None:
+            self.device.close()
+            self.device = None
         if self.fd is not None:
             try:
                 os.close(self.fd)
@@ -126,10 +150,22 @@ def stabilize(timeout: float = 10.0) -> Hub:
 
 
 def write(h: Hub, payload: bytes) -> int:
+    if getattr(h, 'device', None) is not None:
+        packet = bytes([REPORT_ID]) + payload
+        count = h.device.write(packet)
+        if count != len(packet):
+            raise OSError("Incomplete Windows HID write")
+        return count
     return os.write(h.fd, bytes([REPORT_ID]) + payload)
 
 
 def read_reply(h: Hub, timeout_ms: int = 500) -> bytes:
+    if getattr(h, 'device', None) is not None:
+        reply = bytes(h.device.read(PAYLOAD + 1, timeout_ms))
+        # HIDAPI normally strips report ID 0; accept a prefixed reply too.
+        if reply.startswith(b'\x00\x52\x42'):
+            reply = reply[1:]
+        return reply
     r, _, _ = select.select([h.fd], [], [], timeout_ms / 1000.0)
     if not r:
         return b""
@@ -223,3 +259,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

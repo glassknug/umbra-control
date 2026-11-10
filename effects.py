@@ -124,12 +124,16 @@ class Player:
         self.start(Settings(brightness=0))
 
     def fan_manual(self, percent):
+        if usb.sys.platform == 'win32':
+            raise ValueError('Motor control is disabled in the Windows RGB preview')
         percent = float(percent)
         if not 30 <= percent <= 100:
             raise ValueError("Fan duty must be 30–100%")
         self.commands.put(("fan_manual", percent))
 
     def fan_curve(self, points, sensor):
+        if usb.sys.platform == 'win32':
+            raise ValueError('Fan curves are disabled in the Windows RGB preview')
         if not sensor:
             raise ValueError("Select a temperature sensor first")
         self.commands.put(("fan_curve", (validate_points(points), sensor)))
@@ -162,6 +166,8 @@ class Player:
 
     @staticmethod
     def _fan_write(hub, percent, claim=False):
+        if usb.sys.platform == 'win32':
+            raise OSError('Motor control is disabled in the Windows RGB preview')
         def write(body):
             if usb.write(hub, usb.native(bytes(body))) != usb.PAYLOAD + 1:
                 raise OSError("Incomplete fan-control write")
