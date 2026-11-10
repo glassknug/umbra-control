@@ -73,14 +73,18 @@ def main():
     def about():
         messagebox.showinfo(
             "About Umbra Control",
-            ("Umbra Control · Windows preview\n\n" if windows else "Umbra Control for Linux · 0.5.0 preview\n\n") +
-            "Project by glassknug.\n"
-            "Desktop GUI, RGB effects, USB fan-control command analysis and hardware testing, "
-            "temperature curves, profiles, graphs, shortcuts and menu launcher.\n\n"
+            ("Umbra Control · Windows 0.6.1 preview\n\n" if windows else "Umbra Control for Linux · 0.5.0 preview\n\n") +
+            "Created by glassknug.\n\n"
+            "RGB effects and a visual PC layout with fan groups, LED strips and ARGB cables.\n"
+            "Horizontal/vertical fan groups, port identification and configuration export/import.\n"
+            "Hub-wide temperature-based fan curves, profiles and live sensor graphs.\n" +
+            ("Windows: 50–100% fan duty, LibreHardwareMonitor sensors and optional minimized startup at login.\n\n" if windows else "Linux: live hwmon sensors and optional startup with a saved fan curve.\n\n") +
+            "Fans sharing the hub use the same requested motor speed; RGB effects are assigned per port.\n\n"
             "Original Linux HID driver: ToeTagger / LuxDev372.\n"
             "Earlier RGB protocol research: maihcx and u/idk_a_name_wtf.\n\n"
             "Independent community project; not an official AsiaHorse application.\n"
-            "MIT licensed. Original copyright and license notices are preserved.",
+            "MIT licensed. Original copyright and license notices are preserved.\n\n"
+            "github.com/glassknug/umbra-control-linux",
             parent=root,
         )
 
