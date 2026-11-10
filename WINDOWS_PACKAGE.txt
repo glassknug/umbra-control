@@ -1,6 +1,6 @@
-Umbra Control for Windows — 0.6.2 preview
+Umbra Control for Windows — 0.6.3 preview
 
-Recommended: run UmbraControl-Windows-0.6.2-Setup.exe.
+Recommended: run UmbraControl-Windows-0.6.3-Setup.exe.
 Setup installs for the current user, creates a Start menu shortcut, and optionally
 adds a desktop shortcut. Python is included. Do not run from inside an archive.
 Quit the old app before installing. Keep the install directory in place.
@@ -9,7 +9,7 @@ LibreHardwareMonitor 0.9.6 (unmodified) is included with its license and source
 link in LibreHardwareMonitor/SOURCE.txt. No manual DLL folder download is needed.
 Open Sensor setup in Umbra Control. Open the included LibreHardwareMonitor tool
 and review its PawnIO driver installation prompt if required. Drivers are never
-installed silently. Close Umbra Control and use Run as administrator for CPU
+installed silently. Save changes and use Restart as administrator in the app for CPU
 sensor access and enabling/disabling login startup. RGB works without this step.
 
 Choose the CPU sensor under Fan curves before applying. Windows duty is 50–100%.

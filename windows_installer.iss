@@ -4,7 +4,7 @@
 [Setup]
 AppId=glassknug.UmbraControl
 AppName=Umbra Control
-AppVersion=0.6.2
+AppVersion=0.6.3
 AppPublisher=glassknug
 AppPublisherURL=https://github.com/glassknug/umbra-control-linux
 DefaultDirName={localappdata}\Programs\UmbraControl
@@ -12,7 +12,7 @@ DefaultGroupName=Umbra Control
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-OutputBaseFilename=UmbraControl-Windows-0.6.2-Setup
+OutputBaseFilename=UmbraControl-Windows-0.6.3-Setup
 OutputDir={#OutputDir}
 SetupIconFile=umbra-icon.ico
 UninstallDisplayIcon={app}\UmbraControl.exe

@@ -3,6 +3,7 @@ import contextlib
 import os
 from pathlib import Path
 import traceback
+import sys
 
 
 def main():
@@ -15,6 +16,8 @@ def main():
     with log_path.open('a', encoding='utf-8', buffering=1) as log:
         with contextlib.redirect_stdout(log), contextlib.redirect_stderr(log):
             try:
+                from windows_elevation import wait_for_previous
+                wait_for_previous(sys.argv[1:])
                 from asiahorse_gui import main as run
                 return run()
             except Exception:

@@ -34,6 +34,8 @@ jobs:
           python -m unittest discover -s tests -p test_windows_startup.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest discover -s tests -p test_windows_setup.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s tests -p test_windows_elevation.py
           exit $LASTEXITCODE
       - name: Ensure Inno Setup compiler
         shell: pwsh
@@ -47,7 +49,7 @@ jobs:
           path: |
             dist/UmbraControl-Windows-preview.zip
             dist/UmbraControl-Windows-preview.sha256
-            dist/UmbraControl-Windows-0.6.2-Setup.exe
-            dist/UmbraControl-Windows-0.6.2-Setup.sha256
+            dist/UmbraControl-Windows-0.6.3-Setup.exe
+            dist/UmbraControl-Windows-0.6.3-Setup.sha256
           if-no-files-found: error
           retention-days: 14

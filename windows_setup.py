@@ -38,7 +38,7 @@ def show(parent):
     ttk.Label(body, textvariable=status, wraplength=600).pack(anchor='w', pady=12)
     ttk.Label(body, text='1. The installer includes LibreHardwareMonitor; no folder selection is normally needed.\n'
               '2. Open its official sensor tool below. If it asks to install PawnIO, review and accept its driver installer.\n'
-              '3. Close Umbra Control with Quit and right-click its shortcut → Run as administrator for CPU temperatures and login-startup setup.\n'
+              '3. Save your changes, close this guide and use Restart as administrator in the main window for CPU temperatures and login-startup setup.\n'
               '4. Reopen this guide and restart the sensor reader. RGB works without sensor setup.',
               wraplength=600).pack(anchor='w', pady=8)
     def open_monitor():

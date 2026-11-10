@@ -1,3 +1,11 @@
+## Windows 11 preview
+
+Windows users can install Umbra Control using **UmbraControl-Windows-0.6.3-Setup.exe** from the [Windows preview release](https://github.com/glassknug/umbra-control-linux/releases/tag/v0.6.3-windows-preview). Python and LibreHardwareMonitor are included. Use **Sensor setup…** for the optional PawnIO driver and **Restart as administrator** for CPU temperatures and login-startup setup. Save changes before restarting. Driver installation requires your confirmation; it is never silent.
+
+RGB layouts, horizontal/vertical fan groups, ARGB cables, per-port RGB effects, port identification, configuration export/import and shared 50–100% temperature-based fan curves are available. Individual fan motor speeds are not supported. Linux installation remains below.
+
+This is an unsigned preview: SmartScreen may warn. Windows 11 RGB, CPU readings and installer were tested by the project owner; the new UAC restart button still needs hardware verification. Login startup is opt-in; disable it before uninstalling or moving the app. See [Windows setup details](WINDOWS_PREVIEW.md).
+
 # Umbra Control for Linux
 
 Native Linux desktop control for **AsiaHorse Umbra** RGB lighting and USB fan curves.

@@ -73,7 +73,7 @@ def main():
     def about():
         messagebox.showinfo(
             "About Umbra Control",
-            ("Umbra Control · Windows 0.6.2 preview\n\n" if windows else "Umbra Control for Linux · 0.5.0 preview\n\n") +
+            ("Umbra Control · Windows 0.6.3 preview\n\n" if windows else "Umbra Control for Linux · 0.5.0 preview\n\n") +
             "Created by glassknug.\n\n"
             "RGB effects and a visual PC layout with fan groups, LED strips and ARGB cables.\n"
             "Horizontal/vertical fan groups, port identification and configuration export/import.\n"
@@ -220,6 +220,22 @@ def main():
                     windows_sensors.stop()
                 root.destroy()
         wait_for_worker()
+
+    if windows:
+        from windows_setup import is_elevated
+        if not is_elevated():
+            def restart_as_admin():
+                if not messagebox.askokcancel('Restart as administrator',
+                    'Save your layout and profiles first. This closes Umbra Control and requests Windows administrator permission for CPU sensors and login startup. Active effects and curves must be applied again.', parent=root):
+                    return
+                try:
+                    from windows_elevation import request_restart
+                    request_restart()
+                except OSError as exc:
+                    messagebox.showinfo('Administrator restart', str(exc), parent=root)
+                    return
+                close()
+            ttk.Button(sensor_actions, text='Restart as administrator', command=restart_as_admin).pack(side='left', padx=8)
 
     root.protocol("WM_DELETE_WINDOW", root.iconify)
     ttk.Button(header, text="Quit", command=close).pack(side="right", padx=6)

@@ -57,7 +57,7 @@ class WindowsSensorTests(unittest.TestCase):
         cache=SensorCache()
         data=json.loads(sample(0));data['diagnostics']={'elevated':'False','amd_module_loaded':'False','unrelated':'omit'}
         cache.accept(json.dumps(data))
-        self.assertIn('elevated=False',cache.status())
+        self.assertIn('Restart as administrator',cache.status())
         self.assertIn('loaded=False',cache.status())
         self.assertNotIn('unrelated',cache.diagnostics)
         self.assertIsNone(cache.snapshot()[0].value)

@@ -73,7 +73,7 @@ def build():
         (output/(NAME+'.sha256')).write_text(digest+'  '+archive.name+'\n',encoding='ascii')
         compiler = shutil.which('ISCC.exe') or str(Path(os.environ.get('ProgramFiles(x86)', 'C:/Program Files (x86)'))/'Inno Setup 6/ISCC.exe')
         subprocess.run([compiler, '/DPackageDir='+str(app), '/DOutputDir='+str(output), str(ROOT/'windows_installer.iss')], cwd=ROOT, check=True)
-        installer=output/'UmbraControl-Windows-0.6.2-Setup.exe'
+        installer=output/'UmbraControl-Windows-0.6.3-Setup.exe'
         # Exercise installation/uninstallation in an isolated user directory on CI, without launching the app or drivers.
         installed=stage/'installed'
         subprocess.run([str(installer), '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/DIR='+str(installed)], check=True, timeout=180)
@@ -81,7 +81,7 @@ def build():
         subprocess.run([str(installed/'UmbraControl.exe'), '--self-test', str(installed_report)], check=True, timeout=90)
         if not json.loads(installed_report.read_text())['passed']:raise RuntimeError('Installed app self-test failed')
         subprocess.run([str(installed/'unins000.exe'), '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'], check=True, timeout=90)
-        (output/'UmbraControl-Windows-0.6.2-Setup.sha256').write_text(hashlib.sha256(installer.read_bytes()).hexdigest()+'  '+installer.name+'\n',encoding='ascii')
+        (output/'UmbraControl-Windows-0.6.3-Setup.sha256').write_text(hashlib.sha256(installer.read_bytes()).hexdigest()+'  '+installer.name+'\n',encoding='ascii')
         print('Created:',archive)
         print('SHA256:',digest)
         return archive

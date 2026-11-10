@@ -102,7 +102,7 @@ class SensorCache:
                 return 'Sensor samples stale; active curve requests 100%'
             cpu=[s for s in self.sensors if s.key.startswith(('lhm:/amdcpu/','lhm:/intelcpu/')) and s.kind=='temperature']
             if cpu and all(s.value is None for s in cpu):
-                return 'CPU reading unavailable. Helper elevated='+self.diagnostics.get('elevated','unknown')+'; PawnIO module loaded='+self.diagnostics.get('amd_module_loaded','unknown')+'. Run sensor diagnostics for details.'
+                return 'CPU access needs administrator permission. Use Restart as administrator.' if self.diagnostics.get('elevated')=='False' else 'CPU reading unavailable. Helper elevated='+self.diagnostics.get('elevated','unknown')+'; PawnIO module loaded='+self.diagnostics.get('amd_module_loaded','unknown')+'. Run sensor diagnostics for details.'
             return 'LibreHardwareMonitor · read-only samples · expires after 5 seconds'
 
 
